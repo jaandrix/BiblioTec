@@ -1,6 +1,6 @@
 # BiblioTec: contexto para Claude
 
-Biblioteca 3D jugable en el navegador, conectada (solo lectura) con Bitácora (`C:\Users\jandr\Documents\GitHub\agenda`). Lee `docs/planificacion/06-decisiones.md` antes de decidir nada: ahí está lo que el usuario ya eligió (solo escritorio, primera persona, cuentas propias, Supabase aparte, TCGdex para cartas...).
+Biblioteca 3D jugable en el navegador, conectada (solo lectura) con Bitácora (repositorio `agenda`, en la misma carpeta de GitHub que este). Lee `docs/planificacion/06-decisiones.md` antes de decidir nada: ahí está lo que el usuario ya eligió (solo escritorio, primera persona, cuentas propias, Supabase aparte, TCGdex para cartas...).
 
 ## Arquitectura
 
