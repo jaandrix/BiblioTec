@@ -82,7 +82,7 @@ export function Carta({ carta, sitio }: { carta: TCarta; sitio: PosicionCarta })
   // Dos caras planas (frente y dorso): dos llamadas de dibujo por carta. Las
   // brillantes tienen iridiscencia: al girarlas, el brillo cambia de color.
   const frente = useMemo(() => (carta.holo
-    ? new MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.32, metalness: 0.25, iridescence: 0.9, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 900] })
+    ? new MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.32, metalness: 0.25, iridescence: 0.9, iridescenceIOR: 1.6, iridescenceThicknessMinimum: 180, iridescenceThicknessMaximum: 900 })
     : new MeshStandardMaterial({ color: '#ffffff', roughness: 0.55 })), [carta])
 
   useEffect(() => {

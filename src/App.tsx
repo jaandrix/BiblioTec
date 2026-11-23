@@ -2,13 +2,14 @@ import { Environment, Lightformer } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { PCFSoftShadowMap } from 'three'
 import librosDemo from './datos/libros-demo.json'
 import mediosDemo from './datos/medios-demo.json'
 import pokemonDemo from './datos/pokemon-demo.json'
+import { Atrezo, cajasAtrezo } from './escena/Atrezo'
 import { Brazos, Carro } from './escena/Carro'
-import { cajasDeChoque, construir } from './escena/distribucion'
+import { cajasDeChoque, construir, SALA } from './escena/distribucion'
 import { CAJA_MESA, Entrada, posicionesMesa } from './escena/Entrada'
 import { Guia } from './escena/Guia'
 import { GuiaSuelo, Huecos } from './escena/Huecos'
@@ -65,7 +66,7 @@ export default function App() {
     return { libros, destinos, huecosCarro }
   }, [todos, biblioteca, coleccion.carro, coleccion.pendientes])
 
-  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA], [biblioteca])
+  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA, ...cajasAtrezo()], [biblioteca])
 
   return (
     <>
@@ -78,6 +79,7 @@ export default function App() {
         </Environment>
         <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} manual={biblioteca.manual} />
         <Entrada pendientes={coleccion.pendientes.length} />
+        <Suspense fallback={null}><Atrezo ancho={SALA.ancho} /></Suspense>
         <Carro cajas={cajas} />
         <Brazos />
         <LibrosLejanos cuantos={libros.length} />

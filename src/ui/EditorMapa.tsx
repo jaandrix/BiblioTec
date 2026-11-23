@@ -10,7 +10,9 @@ import type { MuebleMapa } from '../tipos'
 // sección guarda. Al guardar, el mapa pasa a ser el tuyo (ya no se reparte
 // solo por pasillos); «volver a lo automático» lo deshace.
 
-const ESCALA = 56
+const ESCALA_MAX = 56
+// El panel lateral, los huecos y la pista ocupan unos 360 px de ancho y 120 de alto.
+const escalaQueCabe = () => Math.max(24, Math.min(ESCALA_MAX, (window.innerWidth - 360) / SALA.ancho, (window.innerHeight - 120) / SALA.fondo))
 const PASO = 0.25
 const COLORES = [COLOR_MADERA, '#c49a6c', '#5b3a24', '#f1efe9', '#2b2b2e', '#3f6b4f', '#2f4f7a', '#8a2233', '#d0453a']
 const ajustar = (v: number) => Math.round(v / PASO) * PASO
@@ -27,6 +29,7 @@ export function EditorMapa() {
   const [elegido, setElegido] = useState<string | null>(null)
   const arrastre = useRef<{ id: string; dx: number; dz: number } | null>(null)
   const svg = useRef<SVGSVGElement>(null)
+  const [escala, setEscala] = useState(escalaQueCabe)
   const actual = muebles.find(m => m.id === elegido) ?? null
 
   const cambiar = (id: string, parcial: Partial<MuebleMapa>) => setMuebles(ms => ms.map(m => (m.id === id ? { ...m, ...parcial } : m)))
@@ -44,9 +47,15 @@ export function EditorMapa() {
     return () => window.removeEventListener('keydown', tecla)
   }, [elegido])
 
+  useEffect(() => {
+    const medir = () => setEscala(escalaQueCabe())
+    window.addEventListener('resize', medir)
+    return () => window.removeEventListener('resize', medir)
+  }, [])
+
   const aMetros = (e: React.PointerEvent) => {
     const r = svg.current!.getBoundingClientRect()
-    return { x: (e.clientX - r.left) / ESCALA - SALA.ancho / 2, z: (e.clientY - r.top) / ESCALA - SALA.fondo / 2 }
+    return { x: (e.clientX - r.left) / escala - SALA.ancho / 2, z: (e.clientY - r.top) / escala - SALA.fondo / 2 }
   }
 
   const empezar = (e: React.PointerEvent, m: MuebleMapa) => {
@@ -81,19 +90,19 @@ export function EditorMapa() {
     <div className="velo-pausa editor-mapa-velo">
       <div className="editor-mapa">
         <div className="mapa-lienzo">
-          <svg ref={svg} width={SALA.ancho * ESCALA} height={SALA.fondo * ESCALA} onPointerMove={mover} onPointerUp={() => { arrastre.current = null }} onPointerDown={() => setElegido(null)}>
+          <svg ref={svg} width={SALA.ancho * escala} height={SALA.fondo * escala} onPointerMove={mover} onPointerUp={() => { arrastre.current = null }} onPointerDown={() => setElegido(null)}>
             <defs>
-              <pattern id="rejilla" width={ESCALA / 2} height={ESCALA / 2} patternUnits="userSpaceOnUse">
-                <path d={`M ${ESCALA / 2} 0 L 0 0 0 ${ESCALA / 2}`} fill="none" stroke="rgba(255,255,255,0.06)" />
+              <pattern id="rejilla" width={escala / 2} height={escala / 2} patternUnits="userSpaceOnUse">
+                <path d={`M ${escala / 2} 0 L 0 0 0 ${escala / 2}`} fill="none" stroke="rgba(255,255,255,0.06)" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="#2d241d" />
             <rect width="100%" height="100%" fill="url(#rejilla)" />
-            <g transform={`translate(${(SALA.ancho / 2) * ESCALA} ${(SALA.fondo / 2) * ESCALA}) scale(${ESCALA})`}>
+            <g transform={`translate(${(SALA.ancho / 2) * escala} ${(SALA.fondo / 2) * escala}) scale(${escala})`}>
               <rect x={MESA.x - MESA.ancho / 2} y={MESA.z - MESA.fondo / 2} width={MESA.ancho} height={MESA.fondo} fill="#6e4a2c" opacity={0.6} />
               <text x={MESA.x} y={MESA.z + 0.08} fontSize={0.22} fill="#f6efe3" textAnchor="middle">mesa</text>
               <rect x={-6} y={0.95} width={0.8} height={1.3} fill="#6e4a2c" opacity={0.6} />
-              <text x={-5.6} y={1.65} fontSize={0.2} fill="#f6efe3" textAnchor="middle">ordenador</text>
+              <text x={-5.6} y={1.65} fontSize={0.14} fill="#f6efe3" textAnchor="middle">ordenador</text>
               <text x={0} y={SALA.fondo / 2 - 0.15} fontSize={0.24} fill="#e0a35a" textAnchor="middle">entrada</text>
               {muebles.map(m => (
                 <g key={m.id} transform={`translate(${m.x} ${m.z}) rotate(${(-m.giro * 180) / Math.PI})`} onPointerDown={e => empezar(e, m)} style={{ cursor: 'grab' }}>

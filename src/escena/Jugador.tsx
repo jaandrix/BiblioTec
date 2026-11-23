@@ -43,6 +43,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   const centro = useMemo(() => new Vector2(0, 0), [])
   const dir = useMemo(() => new Vector3(), [])
   const lado = useMemo(() => new Vector3(), [])
+  const andado = useRef(0)
 
   useEffect(() => {
     camera.position.set(0.8, ALTURA_OJOS, 2.8)
@@ -99,7 +100,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       const { apuntado, coleccion, abierto } = leerEstado()
       if (abierto) {
         if (e.code === 'KeyF' || e.code === 'KeyR') giroInspeccion.volteo += Math.PI
-        if (e.code === 'KeyE' || e.code === 'KeyQ') cambiarEstado({ abierto: null })
+        if (e.code === 'KeyE' || e.code === 'KeyQ') { cambiarEstado({ abierto: null }); sonar.devolver() }
         if (e.code === 'KeyX' && huecoDe(abierto)) {
           const expuesto = !(leerEstado().coleccion.expuestos ?? []).includes(abierto)
           cambiarEstado({ abierto: null })
@@ -158,14 +159,14 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     const clic = (e: MouseEvent) => {
       if (!mando.isLocked) return
       // Clic derecho devuelve lo que tienes en la mano, como en los simuladores.
-      if (e.button === 2) { if (leerEstado().abierto) cambiarEstado({ abierto: null }); return }
+      if (e.button === 2) { if (leerEstado().abierto) { cambiarEstado({ abierto: null }); sonar.devolver() } return }
       if (e.button !== 0) return
       accion()
     }
 
     function accion() {
       const { apuntado, coleccion, abierto } = leerEstado()
-      if (abierto) { cambiarEstado({ abierto: null }); return }
+      if (abierto) { cambiarEstado({ abierto: null }); sonar.devolver(); return }
       if (!apuntado) return
       if (apuntado === 'carro') { alternarCarro(); return }
       if (apuntado.startsWith('caja:')) { cambiarEstado({ cajaAbierta: apuntado.slice(5), apuntado: null }); soltar(); return }
@@ -260,8 +261,11 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       // Por ejes separados, para deslizar a lo largo de una estantería en vez de
       // pararse en seco. Si llevas el carro, tampoco puede meterse en nada.
       const libre = (x: number, z: number) => !choca(x, z, todas) && (!llevoCarro || !cartChoca(x + fx * 0.5, z + fz * 0.5, cajas))
+      const antes = { x: camera.position.x, z: camera.position.z }
       if (libre(camera.position.x + mov.x, camera.position.z)) camera.position.x += mov.x
       if (libre(camera.position.x, camera.position.z + mov.z)) camera.position.z += mov.z
+      andado.current += Math.hypot(camera.position.x - antes.x, camera.position.z - antes.z)
+      if (andado.current > 0.7) { andado.current = 0; sonar.paso() }
     }
     rayo.setFromCamera(centro, camera)
     rayo.far = ALCANCE

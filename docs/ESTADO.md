@@ -1,6 +1,6 @@
 # BiblioTec: dónde estamos
 
-*Actualizado: 23 de noviembre de 2026.*
+*Actualizado: 23 de noviembre de 2026 (tarde).*
 
 ## En una frase
 
@@ -20,6 +20,16 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado, vitrina de graduadas | hecha (con cartas de ejemplo) |
 | 5 | Cuentas, enlace con Bitácora, guardar en la nube | hecha |
 | 6 | Películas, series y videojuegos, pasillos, consolas, editor de mapa, exposición, cajas que se abren, Libib (hecho); créditos en el juego y Spotify (pendiente) | casi |
+
+## Novedades (23-11, auditoría externa)
+
+- **Primera partida guiada:** la primera vez salen seis objetivos en el marcador de arriba a la izquierda (moverse, coger algo de la mesa, seguir las flechas, colocarlo en el hueco que brilla, mirar un libro de cerca y abrir el ordenador). Cada uno se completa al hacerlo, en el orden que sea. Se salta o se vuelve a ver en la pausa (`esc`, pestaña controles).
+- **Pantalla de inicio más clara:** dice para qué es el juego y «probar sin cuenta.» es ahora el botón principal.
+- **Ventanas pequeñas de ordenador** (desde 1024×640): la pausa pone los controles en dos columnas, y la portada, la ficha, el ordenador y el editor de mapa caben sin cortarse.
+- **Rincón de lectura y atrezo** (modelos libres de Kenney): sillón, lámpara de pie, mesita con planta, plantas en las esquinas y cajas de cartón junto a la mesa de la entrada. Todo junto cuesta una sola llamada de dibujo y ninguna textura.
+- **Sonidos de verdad** (Kenney, libres): pasos al andar, y abrir, cerrar, pasar y dejar libros. Si el navegador no los carga, suenan los tonos de antes.
+- **Consola limpia:** sin avisos de Three.js.
+- **Créditos:** `CREDITOS.md` tiene ahora una tabla por recurso con su licencia y dónde se usa.
 
 ## Rendimiento (24-11)
 

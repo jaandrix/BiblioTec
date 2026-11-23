@@ -48,6 +48,11 @@ export interface ItemBitacora {
   datos: Record<string, unknown>
 }
 
+export interface Tutorial {
+  activo: boolean
+  hechos: number[]
+}
+
 export const CAPACIDAD_CAJA = 25
 
 interface Estado {
@@ -70,6 +75,7 @@ interface Estado {
   verRevision: boolean
   cuenta: { email: string } | null
   aviso: { texto: string; n: number } | null
+  tutorial: Tutorial
   config: Config
   coleccion: Coleccion
 }
@@ -80,6 +86,7 @@ const CLAVE_CONFIG = 'bibliotec-config-v2'
 const CLAVE_COLECCION = 'bibliotec-coleccion-v1'
 const CLAVE_POKEMON = 'bibliotec-pokemon-v1'
 const CLAVE_ENLACE = 'bibliotec-enlace-v1'
+const CLAVE_TUTORIAL = 'bibliotec-tutorial-v1'
 
 // Ejemplo: las graduadas van a la vitrina, unas comunes a una caja y el resto al expositor.
 function pokemonInicial(): Pokemon {
@@ -134,6 +141,7 @@ let estado: Estado = {
   verRevision: false,
   cuenta: null,
   aviso: null,
+  tutorial: leer<Tutorial>(CLAVE_TUTORIAL, { activo: true, hechos: [] }),
   config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'media', calidadAuto: true, fov: 62, sonido: true, ejemplos: true }),
   coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {}, expuestos: [] }),
 }
@@ -146,6 +154,7 @@ export function cambiarEstado(parcial: Partial<Estado>) {
   if (siguiente.coleccion !== estado.coleccion) guardar(CLAVE_COLECCION, siguiente.coleccion)
   if (siguiente.pokemon !== estado.pokemon) guardar(CLAVE_POKEMON, siguiente.pokemon)
   if (siguiente.enlace !== estado.enlace) guardar(CLAVE_ENLACE, siguiente.enlace)
+  if (siguiente.tutorial !== estado.tutorial) guardar(CLAVE_TUTORIAL, siguiente.tutorial)
   estado = siguiente
   oyentes.forEach(o => o())
 }

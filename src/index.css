@@ -269,3 +269,49 @@ kbd {
 .fila-botones { display: flex; gap: 6px; flex-wrap: wrap; }
 .pie-editor { display: grid; gap: 8px; border-top: 1px solid #3a2e25; padding-top: 14px; }
 .editor-mapa .nota { color: var(--tinta-suave); font-size: 13px; margin: 0; }
+
+.portada .meta { color: var(--tinta) !important; font-size: 16px !important; line-height: 1.45; margin: 8px 0 20px !important; max-width: 34ch; }
+.portada .nota-probar { margin: 16px 0 10px !important; font-size: 13px !important; }
+.portada .acceso button.principal { background: #3a2e25; color: var(--tinta); font-weight: 500; }
+.portada .acceso button.principal:hover { background: #4a3b2f; }
+.portada .boton-entrar:hover { filter: brightness(1.08); }
+
+.tutorial { margin-top: 10px; padding-top: 10px; border-top: 1px solid #3a2e25; max-width: 230px; }
+.tutorial > span:first-child { display: block; font-size: 11px; color: var(--tinta-suave); }
+.tutorial p { margin: 4px 0 8px !important; max-width: none !important; font-size: 13px !important; color: var(--tinta) !important; }
+.tutorial .puntos { display: flex; gap: 5px; margin-bottom: 6px; }
+.tutorial .puntos i { width: 8px; height: 8px; border-radius: 50%; background: #3a2e25; }
+.tutorial .puntos i.hecho { background: var(--acento); }
+.tutorial .puntos i.ahora { background: var(--tinta); }
+.tutorial small { display: block; font-size: 11px; color: var(--tinta-suave); }
+.ajuste-tutorial { margin-top: 16px; padding-top: 14px; border-top: 1px solid #3a2e25; font-size: 14px; color: var(--tinta-suave); }
+
+/* Ventanas de escritorio pequeñas: los paneles nunca se salen de la pantalla. */
+.portada .caja, .pausa, .editor-portada, .menu-orden { max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: thin; }
+.ficha { max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: none; }
+@media (max-height: 760px) {
+  .portada .caja { padding: 24px 30px; }
+  .portada h1 { font-size: 36px; }
+  .pausa { padding: 22px 26px; }
+  .pausa h1 { font-size: 26px; margin-bottom: 12px; }
+  .lista-controles { gap: 4px; font-size: 13px; }
+  .ficha { padding: 22px; }
+  .ficha .autor { margin-bottom: 14px; }
+  .ficha .filas { gap: 7px; margin-bottom: 16px; }
+  .controles-ficha { gap: 4px; }
+  .crt { padding: 24px 30px 14px; }
+  .crt-texto { font-size: 20px; }
+}
+@media (max-width: 1100px) {
+  .ficha { right: 2vw; width: min(340px, 38vw); }
+  .portada-doble { gap: 24px; }
+}
+.editor-mapa aside { max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: thin; }
+.mapa-lienzo { max-width: calc(100vw - 340px); }
+.portada-doble > .lista-controles { align-self: center; }
+@media (max-height: 760px) {
+  .pausa { width: min(720px, 94vw); }
+  .pausa .lista-controles { grid-template-columns: 1fr 1fr; column-gap: 22px; }
+  .pausa .lista-controles li { grid-template-columns: 70px 1fr; }
+}
+.lista-controles kbd { white-space: nowrap; margin-right: 0; }

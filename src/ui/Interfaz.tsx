@@ -8,6 +8,7 @@ import { EditorMapa } from './EditorMapa'
 import { EditorPortada } from './EditorPortada'
 import { MenuOrden } from './MenuOrden'
 import { Terminal } from './Terminal'
+import { empezarTutorial, PasoTutorial, saltarTutorial, VigilarTutorial } from './Tutorial'
 
 function Fila({ etiqueta, valor }: { etiqueta: string; valor: string | number | null | undefined }) {
   return (
@@ -51,8 +52,11 @@ function Marcador() {
   const llevo = useEstado(e => e.llevoCarro)
   const hoy = useEstado(() => hechosHoy())
   const revision = useEstado(e => e.revision.length)
-  if (!pendientes && !carro && !hoy && !llevo && !revision) return null
-  const paso = llevo && !carro && !pendientes ? 'carro vacío. pulsa c para dejarlo y moverte libre.'
+  const tutorial = useEstado(e => e.tutorial.activo)
+  if (!pendientes && !carro && !hoy && !llevo && !revision && !tutorial) return null
+  // Mientras dura la partida guiada, el paso a seguir lo dice ella.
+  const paso = tutorial ? null
+    : llevo && !carro && !pendientes ? 'carro vacío. pulsa c para dejarlo y moverte libre.'
     : revision ? `${revision} ${revision === 1 ? 'cosa nueva' : 'cosas nuevas'} de bitácora. pulsa n para revisarlas.`
     : !llevo && pendientes ? 'en la mesa de la entrada hay cosas por ordenar. el carro está al lado: haz clic en una y se cogerá solo.'
     : carro ? 'sigue las flechas del suelo. donde va cada libro brilla un hueco con una flecha encima: apúntalo y haz clic.'
@@ -64,6 +68,7 @@ function Marcador() {
       <div><span>en el carro.</span><strong>{carro}</strong></div>
       <div><span>hoy.</span><strong>{hoy}</strong></div>
       {paso && <p>{paso}</p>}
+      {tutorial && <PasoTutorial />}
     </div>
   )
 }
@@ -98,10 +103,17 @@ const CONTROLES: [string, string][] = [
 ]
 
 function Controles() {
+  const tutorial = useEstado(e => e.tutorial.activo)
   return (
-    <ul className="lista-controles">
-      {CONTROLES.map(([k, t]) => <li key={k}><kbd>{k}</kbd><span>{t}</span></li>)}
-    </ul>
+    <>
+      <ul className="lista-controles">
+        {CONTROLES.map(([k, t]) => <li key={k}><kbd>{k}</kbd><span>{t}</span></li>)}
+      </ul>
+      <div className="ajuste ajuste-tutorial">
+        <span>{tutorial ? 'partida guiada en marcha.' : 'partida guiada.'}</span>
+        <button onClick={tutorial ? saltarTutorial : empezarTutorial}>{tutorial ? 'saltarla.' : 'verla otra vez.'}</button>
+      </div>
+    </>
   )
 }
 
@@ -119,6 +131,7 @@ function Portada() {
       <div className="caja portada-doble">
         <div>
           <h1>bibliotec.</h1>
+          <p className="meta">recorre tu biblioteca, recoge lo que espera en la mesa de la entrada y colócalo en su sitio.</p>
           {cuenta ? (
             <>
               <p>hola, {cuenta.email}. tu biblioteca está guardada en la nube.</p>
@@ -126,9 +139,9 @@ function Portada() {
             </>
           ) : (
             <>
-              <p>entra con tu cuenta para guardar tu biblioteca y conectar bitácora.</p>
+              <button className="boton-entrar" onClick={entrar}>probar sin cuenta.</button>
+              <p className="nota-probar">se guarda solo en este navegador. con una cuenta, en la nube y con bitácora:</p>
               <Acceso />
-              <button className="enlace" onClick={entrar}>probar sin cuenta.</button>
             </>
           )}
         </div>
@@ -250,6 +263,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
       {dentro && !mirando && pista && <div className="pista-mirilla">{rotulo && <b>{rotulo}</b>}<span>{pista}</span></div>}
       {dentro && !mirando && <Marcador />}
       <Aviso />
+      <VigilarTutorial />
       {libro && dentro && <Ficha libro={libro} />}
       {carta && dentro && <FichaCarta carta={carta} />}
       {sellado && dentro && <FichaSellado sellado={sellado} />}
