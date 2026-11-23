@@ -68,7 +68,7 @@ export function Libro({ libro, destino, indice }: { libro: TLibro; destino: Dest
 
   // La portada real solo se baja cuando se va a ver: al abrir el libro o si
   // espera tumbado en la mesa de la entrada. Al abrirlo se pinta en alta.
-  const verPortada = abierto || destino.tipo === 'mesa'
+  const verPortada = abierto || destino.tipo === 'mesa' || (destino.tipo === 'balda' && !!destino.hueco.expuesto)
   const estadoTextura = useRef<{ fondo: string; img: HTMLImageElement | null; alta: boolean }>({ fondo: colorDeLibro(libro), img: null, alta: false })
 
   // Solo los objetos cercanos (o en la mano, la mesa o el carro) llevan su

@@ -1,5 +1,6 @@
 import { BoxGeometry, CanvasTexture, SRGBColorSpace } from 'three'
 import type { Libro } from '../tipos'
+import { fondoLibro } from '../escena/distribucion'
 import { colorDeTexto } from './color'
 
 // Cada objeto lleva UNA textura con todo su forro (portada, lomo,
@@ -198,19 +199,22 @@ function pintarPortadaSinImagen(ctx: CanvasRenderingContext2D, libro: Libro, x: 
   }
 }
 
-function pintarPortada(ctx: CanvasRenderingContext2D, libro: Libro, e: Estilo | null, img: HTMLImageElement | null, ancho: number, h: number, fondo: string, escala: number) {
+function pintarPortada(ctx: CanvasRenderingContext2D, libro: Libro, e: Estilo | null, img: HTMLImageElement | null, ancho: number, h: number, fondo: string, escala: number, proporcion: number) {
   const cab = e ? h * e.alto : 0
   const y = cab
   const alto = h - cab
   if (img) {
-    // Recorte tipo «cover»: llena el hueco sin deformar la imagen.
-    const k = Math.max(ancho / img.width, alto / img.height)
+    // Recorte tipo «cover» con las proporciones de la tapa de verdad (la
+    // textura es más estrecha y luego se estira): llena sin deformar.
+    const real = h * proporcion
+    const k = Math.max(real / img.width, alto / img.height)
     const w = img.width * k, hh = img.height * k
     ctx.save()
+    ctx.scale(ancho / real, 1)
     ctx.beginPath()
-    ctx.rect(0, y, ancho, alto)
+    ctx.rect(0, y, real, alto)
     ctx.clip()
-    ctx.drawImage(img, (ancho - w) / 2, y + (alto - hh) / 2, w, hh)
+    ctx.drawImage(img, (real - w) / 2, y + (alto - hh) / 2, w, hh)
     ctx.restore()
   } else pintarPortadaSinImagen(ctx, libro, 0, y, ancho, alto, fondo, escala)
   if (e) {
@@ -257,7 +261,7 @@ export function texturaLibro(libro: Libro, grosor: number, alto: number, fondo: 
   lienzo.width = m.ancho
   lienzo.height = m.h
   const ctx = lienzo.getContext('2d')!
-  pintarPortada(ctx, libro, e, portada, m.portada, m.h, fondo, escala)
+  pintarPortada(ctx, libro, e, portada, m.portada, m.h, fondo, escala, fondoLibro(libro) / alto)
   if (e) pintarLomoCaja(ctx, libro, e, m.portada, m.lomo, m.h, escala)
   else pintarLomoLibro(ctx, libro, m.portada, m.lomo, m.h, fondo, escala)
   const xc = m.portada + m.lomo
