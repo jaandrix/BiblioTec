@@ -1,10 +1,11 @@
-import type { Mesh, Object3D, PerspectiveCamera } from 'three'
+import type { Object3D, PerspectiveCamera } from 'three'
 import type { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import type { Libro } from '../tipos'
 import type { Biblioteca } from './distribucion'
 
 // Lo que comparten la escena y la interfaz sin pasar por React en cada fotograma.
-export const mallasLibros = new Map<string, Mesh>()
+// Todo lo que se puede coger para mirar: libros, cartas y producto sellado.
+export const mallasLibros = new Map<string, Object3D>()
 export const interactivos = new Map<string, Object3D>()
 // Giro y distancia del libro que miras de cerca; `volteo` es el giro al que va
 // (f le da media vuelta) y `y` lo sigue suave.

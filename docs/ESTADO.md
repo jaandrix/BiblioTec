@@ -17,8 +17,8 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 2 | Estanterías por género, ordenar, ampliar, ordenador retro | hecha |
 | 3 | Mesa de entrada, carro, huecos que brillan, añadir libros por título | hecha |
 | 3.5 | Pulido: inspección nueva, pausa y ajustes, zoom, dejar el carro, brazos, cambiar portadas, mejor aspecto | hecha |
-| 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado | siguiente |
-| 5 | Cuentas, enlace con Bitácora, guardar en la nube | pendiente |
+| 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado, vitrina de graduadas | hecha (con cartas de ejemplo) |
+| 5 | Cuentas, enlace con Bitácora, guardar en la nube | siguiente |
 | 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | pendiente |
 
 ## Cómo se juega
@@ -31,13 +31,15 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
    1. En la mesa "por ordenar." de la entrada, haz clic en un libro para cogerlo al carro (`t` los coge todos).
    2. Sigue las flechas del suelo (`g` las apaga) hasta el hueco que brilla, con una flecha flotando encima.
    3. Apunta al hueco y haz clic: el libro vuela a su sitio. Arriba a la izquierda se cuenta lo que llevas hoy y qué toca hacer.
-6. **Ordenador retro** (a la izquierda de la entrada): clic para usarlo y escribe `ayuda`. Los más útiles:
+6. **Zona Pokémon** (a la izquierda, con suelo de tienda): clic en una carta para mirarla (las brillantes cambian de color al girarlas) con su precio de Cardmarket; `b` la guarda en una caja negra; clic en una caja para abrirla y devolver cartas al expositor; `o` mirando una carta ordena el expositor por set, nombre o rareza. También hay estantería de producto sellado y una vitrina con las graduadas.
+7. **Ordenador retro** (a la izquierda de la entrada): clic para usarlo y escribe `ayuda`. Los más útiles:
    - `buscar tolkien` y luego `ir 1`: te marca el libro con una columna de luz.
    - `donde dune`: en qué estantería, mueble y balda está, y dónde lo tienes en casa.
    - `ordenar fantasia por color` o `ordenar todas por saga`.
    - `ampliar fantasia`: añade un mueble a esa estantería.
    - `añadir el hobbit` y luego `elegir 1`: busca el libro en Open Library y lo deja en la mesa.
    - `colocar todo`: coloca de golpe lo que hay en la mesa y en el carro.
+   - `cartas`, `cajas`, `caja nueva <nombre>`, `valor` (valor de mercado de tus cartas).
    - `estadisticas`, `pendientes`, `salir`.
 
 ## Cómo está hecho (para curiosos)
@@ -54,7 +56,10 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 - **Mover libros a mano, fijarlos y colocarlos fuera de orden** (preguntas 89 a 91): más adelante.
 - **Ubicaciones de casa** editables desde el ordenador: más adelante. Ahora la ficha dice "sin ubicación".
 - **Menú con flechas en el ordenador:** de momento hay botones con los comandos.
-- **Películas, series, videojuegos, consolas, Spotify y modelos 3D más bonitos** (Kenney, Poly Pizza): fases 4 a 6.
+- **Tus cartas reales:** en Bitácora casi ninguna tiene set y número; con el enlace (fase 5) entrarán y las que no se reconozcan esperarán en la entrada para completarlas. El repositorio es público, así que no subo tu colección al código.
+- **Cartas por la entrada y el carro:** de momento las cartas nuevas no pasan por la mesa; se hará junto al enlace con Bitácora.
+- **Medidas reales del producto sellado:** las de ahora son aproximadas; se afinarán con los datos de DeepSeek.
+- **Películas, series, videojuegos, consolas, Spotify y modelos 3D más bonitos** (Kenney, Poly Pizza): fases 5 y 6.
 - **Encargos externos:** los resultados de DeepSeek (medidas reales, productos Pokémon, textos del terminal) y la prueba de OpenCode aún no han llegado. La fase 4 aprovechará los datos de DeepSeek si los tienes.
 
 ## Auditoría

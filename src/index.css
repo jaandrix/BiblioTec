@@ -196,3 +196,19 @@ kbd {
 .editor-portada .pie { display: flex; gap: 10px; align-items: flex-end; }
 .editor-portada .pie button.principal { margin-top: 18px; }
 .editor-portada .pie button:first-child { margin-top: 18px; white-space: nowrap; }
+
+.caja-abierta { width: min(760px, 94vw); }
+.cabecera-caja { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+.cabecera-caja input { font: inherit; font-size: 24px; font-weight: 600; background: transparent; border: 0; border-bottom: 1px dashed #5a4636; color: var(--tinta); padding: 2px 0; flex: 1; }
+.cabecera-caja span { color: var(--tinta-suave); font-size: 14px; }
+.rejilla-cartas { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; max-height: 420px; overflow-y: auto; }
+.carta-caja { display: grid; gap: 6px; }
+.carta-caja img { width: 100%; aspect-ratio: 63 / 88; object-fit: cover; border-radius: 6px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
+.carta-caja button { padding: 6px !important; font-size: 12px !important; }
+.caja-abierta .nota { color: var(--tinta-suave); font-size: 14px; }
+.lista-cajas { display: grid; gap: 8px; margin-bottom: 14px; }
+.lista-cajas button { display: flex; justify-content: space-between; align-items: center; text-align: left; }
+.lista-cajas button:disabled { opacity: 0.45; cursor: default; }
+.lista-cajas small { color: var(--tinta-suave); }
+.nueva-caja { display: flex; gap: 8px; }
+.nueva-caja input { flex: 1; font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 1px solid #4a3b2f; background: #1a1410; color: var(--tinta); }

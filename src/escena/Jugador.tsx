@@ -52,7 +52,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     control.camara = camera as PerspectiveCamera
     if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros, pasar: (n = 30) => { for (let i = 0; i < n; i++) advance(performance.now() + i * 16) } } })
 
-    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null })
+    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null })
     const alSalir = () => {
       if (soltadoPropio.activo) {
         soltadoPropio.activo = false
@@ -95,7 +95,8 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       const { apuntado, coleccion, abierto } = leerEstado()
       if (abierto) {
         if (e.code === 'KeyF') giroInspeccion.volteo += Math.PI
-        if (e.code === 'KeyP') { cambiarEstado({ editarPortada: abierto }); soltar() }
+        if (e.code === 'KeyP' && !abierto.startsWith('carta_') && !abierto.startsWith('sellado_')) { cambiarEstado({ editarPortada: abierto }); soltar() }
+        if (e.code === 'KeyB' && abierto.startsWith('carta_')) { cambiarEstado({ guardarEnCaja: abierto, abierto: null }); soltar() }
         return
       }
       if (e.code === 'KeyG') {
@@ -104,6 +105,11 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       }
       if (e.code === 'KeyC') alternarCarro()
       if (e.code === 'KeyT' && apuntado && coleccion.pendientes.includes(apuntado)) cogerAlCarro(coleccion.pendientes)
+      if (e.code === 'KeyO' && apuntado?.startsWith('carta_')) {
+        cambiarEstado({ menuOrden: 'pokemon', apuntado: null })
+        soltar()
+        return
+      }
       if (e.code === 'KeyO') {
         const hueco = apuntado ? huecoDe(apuntado) : null
         if (!hueco) return
@@ -120,6 +126,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       if (abierto) { cambiarEstado({ abierto: null }); return }
       if (!apuntado) return
       if (apuntado === 'carro') { alternarCarro(); return }
+      if (apuntado.startsWith('caja:')) { cambiarEstado({ cajaAbierta: apuntado.slice(5), apuntado: null }); soltar(); return }
       if (apuntado.startsWith('hueco:')) {
         if (!leerEstado().llevoCarro && distanciaAlCarro() > CARRO_CERCA) { sonar.error(); avisar('el libro está en el carro y el carro está lejos.'); return }
         colocar([apuntado.slice(6)])
@@ -174,7 +181,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   }, [camera, gl])
 
   useFrame((_, dt) => {
-    const { dentro, abierto, terminal, menuOrden, config, llevoCarro } = leerEstado()
+    const { dentro, abierto, terminal, menuOrden, config, llevoCarro, cajaAbierta, guardarEnCaja } = leerEstado()
     const mando = control.mando
     const cam = camera as PerspectiveCamera
     if (mando) {
@@ -189,7 +196,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       cam.updateProjectionMatrix()
     }
 
-    if (!dentro || abierto || terminal || menuOrden) return
+    if (!dentro || abierto || terminal || menuOrden || cajaAbierta || guardarEnCaja) return
     const t = teclas.current
     const avance = (t.has('KeyW') || t.has('ArrowUp') ? 1 : 0) - (t.has('KeyS') || t.has('ArrowDown') ? 1 : 0)
     const giro = (t.has('KeyD') || t.has('ArrowRight') ? 1 : 0) - (t.has('KeyA') || t.has('ArrowLeft') ? 1 : 0)

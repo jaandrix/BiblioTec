@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { alternarGuiaSuelo, cambiarAjuste, cambiarEstado, hechosHoy, useEstado } from '../estado'
 import { entrar, huecoDe } from '../escena/registro'
-import type { Libro } from '../tipos'
+import type { Carta, Libro, Sellado } from '../tipos'
+import { CajaAbierta, ElegirCaja, FichaCarta, FichaSellado, MenuOrdenCartas } from './Pokemon'
 import { EditorPortada } from './EditorPortada'
 import { MenuOrden } from './MenuOrden'
 import { Terminal } from './Terminal'
@@ -154,7 +155,7 @@ function Pausa() {
   )
 }
 
-export function Interfaz({ libros }: { libros: Libro[] }) {
+export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas: Carta[]; sellados: Sellado[] }) {
   const dentro = useEstado(e => e.dentro)
   const abierto = useEstado(e => e.abierto)
   const apuntado = useEstado(e => e.apuntado)
@@ -165,7 +166,13 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
   const editar = useEstado(e => e.editarPortada)
   const pendientes = useEstado(e => e.coleccion.pendientes)
   const carro = useEstado(e => e.coleccion.carro)
+  const cajaAbierta = useEstado(e => e.cajaAbierta)
+  const guardarEnCaja = useEstado(e => e.guardarEnCaja)
   const libro = abierto ? libros.find(l => l.id === abierto) : null
+  const carta = abierto ? cartas.find(c => c.id === abierto) : null
+  const sellado = abierto ? sellados.find(s => s.id === abierto) : null
+  const cartaGuardar = guardarEnCaja ? cartas.find(c => c.id === guardarEnCaja) : null
+  const mirando = libro || carta || sellado
   const libroEditar = editar ? libros.find(l => l.id === editar) : null
 
   // Tras un menú, el navegador a veces no devuelve el ratón al momento: basta
@@ -179,21 +186,29 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
   const pista = !apuntado ? null
     : apuntado === 'terminal' ? <><kbd>clic</kbd> usar el ordenador</>
     : apuntado === 'carro' ? <><kbd>clic</kbd> coger el carro</>
+    : apuntado.startsWith('caja:') ? <><kbd>clic</kbd> abrir la caja</>
+    : apuntado.startsWith('carta_') ? <><kbd>clic</kbd> mirar <kbd>o</kbd> ordenar el expositor</>
+    : apuntado.startsWith('sellado_') ? <><kbd>clic</kbd> mirar</>
     : apuntado.startsWith('hueco:') ? <><kbd>clic</kbd> colocar aquí</>
     : pendientes.includes(apuntado) ? <><kbd>clic</kbd> al carro <kbd>t</kbd> todos al carro</>
     : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado.</>
     : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
 
-  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar
+  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar
   return (
     <>
-      {dentro && !libro && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
-      {dentro && !libro && pista && <div className="pista-mirilla">{pista}</div>}
-      {dentro && !libro && <Marcador />}
+      {dentro && !mirando && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
+      {dentro && !mirando && pista && <div className="pista-mirilla">{pista}</div>}
+      {dentro && !mirando && <Marcador />}
       <Aviso />
       {libro && dentro && <Ficha libro={libro} />}
+      {carta && dentro && <FichaCarta carta={carta} />}
+      {sellado && dentro && <FichaSellado sellado={sellado} />}
+      {cajaAbierta && <CajaAbierta id={cajaAbierta} cartas={cartas} />}
+      {cartaGuardar && <ElegirCaja carta={cartaGuardar} />}
       {terminal && <Terminal />}
-      {menuOrden && <MenuOrden seccion={menuOrden} />}
+      {menuOrden === 'pokemon' && <MenuOrdenCartas />}
+      {menuOrden && menuOrden !== 'pokemon' && <MenuOrden seccion={menuOrden} />}
       {libroEditar && <EditorPortada libro={libroEditar} />}
       {pausa && <Pausa />}
       {sinNada && inicio && <Portada />}

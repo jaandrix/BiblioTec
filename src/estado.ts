@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import type { Criterio, Libro } from './tipos'
+import type { CajaCartas, Criterio, CriterioCartas, Libro } from './tipos'
+import pokemonDemo from './datos/pokemon-demo.json'
 
 export interface Config {
   criterios: Record<string, Criterio>
@@ -18,6 +19,14 @@ export interface Coleccion {
   portadas: Record<string, string>
 }
 
+export interface Pokemon {
+  expositor: string[]
+  cajas: CajaCartas[]
+  criterio: CriterioCartas
+}
+
+export const CAPACIDAD_CAJA = 25
+
 interface Estado {
   dentro: boolean
   apuntado: string | null
@@ -29,6 +38,9 @@ interface Estado {
   inicio: boolean
   llevoCarro: boolean
   editarPortada: string | null
+  cajaAbierta: string | null
+  guardarEnCaja: string | null
+  pokemon: Pokemon
   aviso: { texto: string; n: number } | null
   config: Config
   coleccion: Coleccion
@@ -37,6 +49,18 @@ interface Estado {
 export const MAX_CARRO = 20
 const CLAVE_CONFIG = 'bibliotec-config-v1'
 const CLAVE_COLECCION = 'bibliotec-coleccion-v1'
+const CLAVE_POKEMON = 'bibliotec-pokemon-v1'
+
+// Ejemplo: las graduadas van a la vitrina, unas comunes a una caja y el resto al expositor.
+function pokemonInicial(): Pokemon {
+  const sueltas = pokemonDemo.cartas.filter(c => !('graduada' in c))
+  const comunes = sueltas.filter(c => /^(común|uncommon)$/i.test(c.rareza)).slice(0, 6).map(c => c.id)
+  return {
+    expositor: sueltas.map(c => c.id).filter(id => !comunes.includes(id)),
+    cajas: [{ id: 'caja_1', nombre: 'kanto', cartas: comunes }, { id: 'caja_2', nombre: 'repetidas', cartas: [] }],
+    criterio: 'set',
+  }
+}
 // Mientras no hay enlace con Bitácora, estos libros de ejemplo esperan en la
 // entrada la primera vez, para que haya algo que ordenar.
 const PENDIENTES_INICIALES = ['demo_OL8479867W', 'demo_OL46125W', 'demo_OL17075811W', 'demo_OL21745884W', 'demo_OL14860424W', 'demo_OL26387829W']
@@ -68,6 +92,9 @@ let estado: Estado = {
   inicio: true,
   llevoCarro: true,
   editarPortada: null,
+  cajaAbierta: null,
+  guardarEnCaja: null,
+  pokemon: leer<Pokemon>(CLAVE_POKEMON, pokemonInicial()),
   aviso: null,
   config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'alta', sonido: true }),
   coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {} }),
@@ -79,6 +106,7 @@ export function cambiarEstado(parcial: Partial<Estado>) {
   if ((Object.keys(parcial) as (keyof Estado)[]).every(k => siguiente[k] === estado[k])) return
   if (siguiente.config !== estado.config) guardar(CLAVE_CONFIG, siguiente.config)
   if (siguiente.coleccion !== estado.coleccion) guardar(CLAVE_COLECCION, siguiente.coleccion)
+  if (siguiente.pokemon !== estado.pokemon) guardar(CLAVE_POKEMON, siguiente.pokemon)
   estado = siguiente
   oyentes.forEach(o => o())
 }
@@ -139,6 +167,38 @@ export function anadirPendiente(libro: Libro) {
     anadidos: [...c.anadidos.filter(l => l.id !== libro.id), libro],
     pendientes: c.pendientes.includes(libro.id) ? c.pendientes : [...c.pendientes, libro.id],
   }))
+}
+
+function cambiarPokemon(f: (p: Pokemon) => Partial<Pokemon>) {
+  cambiarEstado({ pokemon: { ...estado.pokemon, ...f(estado.pokemon) } })
+}
+
+// Mueve una carta al expositor o a una caja (sin pasar de 25 por caja).
+export function moverCarta(id: string, destino: 'expositor' | string): boolean {
+  const p = estado.pokemon
+  if (destino !== 'expositor') {
+    const caja = p.cajas.find(c => c.id === destino)
+    if (!caja || caja.cartas.length >= CAPACIDAD_CAJA) return false
+  }
+  cambiarPokemon(p => ({
+    expositor: destino === 'expositor' ? [...p.expositor.filter(x => x !== id), id] : p.expositor.filter(x => x !== id),
+    cajas: p.cajas.map(c => ({ ...c, cartas: c.id === destino ? [...c.cartas.filter(x => x !== id), id] : c.cartas.filter(x => x !== id) })),
+  }))
+  return true
+}
+
+export function crearCaja(nombre: string) {
+  const id = 'caja_' + Date.now().toString(36)
+  cambiarPokemon(p => ({ cajas: [...p.cajas, { id, nombre: nombre.trim().toLowerCase() || 'sin nombre', cartas: [] }] }))
+  return id
+}
+
+export function renombrarCaja(id: string, nombre: string) {
+  cambiarPokemon(p => ({ cajas: p.cajas.map(c => (c.id === id ? { ...c, nombre: nombre.trim().toLowerCase() || c.nombre } : c)) }))
+}
+
+export function cambiarCriterioCartas(criterio: CriterioCartas) {
+  cambiarPokemon(() => ({ criterio }))
 }
 
 let numAviso = 0

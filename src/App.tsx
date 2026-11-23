@@ -5,6 +5,8 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo } from 'react'
 import { PCFSoftShadowMap } from 'three'
 import librosDemo from './datos/libros-demo.json'
+import pokemonDemo from './datos/pokemon-demo.json'
+import { CAJAS_POKEMON, ZonaPokemon } from './escena/pokemon/ZonaPokemon'
 import { Brazos, Carro } from './escena/Carro'
 import { cajasDeChoque, construir } from './escena/distribucion'
 import { CAJA_MESA, Entrada, posicionesMesa } from './escena/Entrada'
@@ -17,10 +19,12 @@ import { Sala } from './escena/Sala'
 import { CAJA_TERMINAL, Terminal3D } from './escena/Terminal3D'
 import { useEstado } from './estado'
 import { colorDeLibro } from './libros/color'
-import type { Libro as TLibro } from './tipos'
+import type { Carta, Libro as TLibro, Sellado } from './tipos'
 import { Interfaz } from './ui/Interfaz'
 
 const LIBROS = librosDemo as TLibro[]
+const CARTAS = pokemonDemo.cartas as Carta[]
+const SELLADOS = pokemonDemo.sellados as Sellado[]
 
 export default function App() {
   const config = useEstado(e => e.config)
@@ -53,7 +57,7 @@ export default function App() {
     return { libros, destinos, huecosCarro }
   }, [todos, biblioteca, coleccion.carro, coleccion.pendientes])
 
-  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA], [biblioteca])
+  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA, ...CAJAS_POKEMON], [biblioteca])
 
   return (
     <>
@@ -66,6 +70,7 @@ export default function App() {
         </Environment>
         <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} />
         <Entrada pendientes={coleccion.pendientes.length} />
+        <ZonaPokemon cartas={CARTAS} sellados={SELLADOS} />
         <Carro cajas={cajas} />
         <Brazos />
         {libros.map(l => <Libro key={l.id} libro={l} destino={destinos.get(l.id)!} />)}
@@ -83,7 +88,7 @@ export default function App() {
           </EffectComposer>
         )}
       </Canvas>
-      <Interfaz libros={todos} />
+      <Interfaz libros={todos} cartas={CARTAS} sellados={SELLADOS} />
     </>
   )
 }

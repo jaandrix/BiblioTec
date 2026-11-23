@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { anadirPendiente, cambiarCriterio, cambiarEstado, colocar, leerEstado, sumarModulo } from '../estado'
+import { anadirPendiente, cambiarCriterio, cambiarEstado, colocar, crearCaja, leerEstado, sumarModulo } from '../estado'
+import pokemonDemo from '../datos/pokemon-demo.json'
+import { precioCarta } from './Pokemon'
 import { control, entrar } from '../escena/registro'
 import { ejecutar } from '../terminal/comandos'
-import type { Libro } from '../tipos'
+import type { Carta, Libro } from '../tipos'
 import { sonar } from '../sonido'
 
-const ATAJOS = ['ayuda', 'buscar ', 'añadir ', 'pendientes', 'colocar todo', 'estanterias', 'estadisticas', 'salir']
+const ATAJOS = ['ayuda', 'buscar ', 'añadir ', 'pendientes', 'colocar todo', 'cartas', 'valor', 'cajas', 'salir']
 
 function arranque() {
   const b = control.biblioteca
@@ -53,6 +55,10 @@ export function Terminal() {
       ultimaBusqueda: busqueda.current,
       candidatos: candidatos.current,
       anadir: anadirPendiente,
+      cartas: pokemonDemo.cartas as Carta[],
+      cajas: leerEstado().pokemon.cajas,
+      crearCaja: n => { crearCaja(n) },
+      precio: precioCarta,
       colocarTodo: () => { colocar([...coleccion.pendientes, ...coleccion.carro]); sonar.colocar() },
       ordenar: cambiarCriterio,
       ampliar: sumarModulo,

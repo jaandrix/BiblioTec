@@ -47,3 +47,40 @@ export interface Caja {
   min: [number, number]
   max: [number, number]
 }
+
+export interface Carta {
+  id: string
+  tipo: 'carta'
+  tcgdex: string
+  nombre: string
+  set: string
+  setId: string
+  numero: string
+  total: number | null
+  rareza: string
+  imagen: string
+  holo: boolean
+  estado: string
+  graduada?: { empresa: string; nota: number }
+}
+
+export type FormatoSellado = 'etb' | 'media-caja' | 'caja' | 'sobre' | 'lata' | 'coleccion'
+
+export interface Sellado {
+  id: string
+  tipo: 'sellado'
+  formato: FormatoSellado
+  nombre: string
+  set: string
+  setId: string
+  logo: string | null
+  simbolo: string | null
+}
+
+export interface CajaCartas {
+  id: string
+  nombre: string
+  cartas: string[]
+}
+
+export type CriterioCartas = 'set' | 'nombre' | 'rareza'

@@ -1,6 +1,6 @@
 import type { Biblioteca } from '../escena/distribucion'
 import { CRITERIOS } from '../libros/orden'
-import type { Criterio, Hueco, Libro, Seccion } from '../tipos'
+import type { CajaCartas, Carta, Criterio, Hueco, Libro, Seccion } from '../tipos'
 
 export interface Contexto {
   biblioteca: Biblioteca
@@ -10,6 +10,10 @@ export interface Contexto {
   candidatos: Libro[]
   anadir: (libro: Libro) => void
   colocarTodo: () => void
+  cartas: Carta[]
+  cajas: CajaCartas[]
+  crearCaja: (nombre: string) => void
+  precio: (tcgdex: string) => Promise<number | null>
   ordenar: (seccion: string, criterio: Criterio) => void
   ampliar: (seccion: string) => void
   guiar: (id: string) => void
@@ -71,6 +75,10 @@ export const AYUDA = [
   '  AÑADIR <TITULO>      BUSCA UN LIBRO EN OPEN LIBRARY',
   '  ELEGIR <N>           LO DEJA EN LA MESA DE LA ENTRADA',
   '  COLOCAR TODO         COLOCA SOLO LO PENDIENTE Y EL CARRO',
+  '  CARTAS               RESUMEN DE TU COLECCION POKEMON',
+  '  CAJAS                CAJAS DE CARTAS Y SU OCUPACION',
+  '  CAJA NUEVA <NOMBRE>  CREA UNA CAJA NEGRA (25 CARTAS)',
+  '  VALOR                VALOR DE MERCADO DE TUS CARTAS',
   '  CREDITOS  LIMPIAR  SALIR',
 ]
 
@@ -220,8 +228,40 @@ export function ejecutar(linea: string, ctx: Contexto): Respuesta {
       ctx.colocarTodo()
       return { lineas: [`COLOCANDO ${n} ${n === 1 ? 'LIBRO' : 'LIBROS'} EN SU SITIO... HECHO.`] }
     }
+    case 'cartas': {
+      const holo = ctx.cartas.filter(c => c.holo).length
+      const sets = new Set(ctx.cartas.map(c => c.set)).size
+      return { lineas: [`CARTAS ............ ${ctx.cartas.length}`, `BRILLANTES ........ ${holo}`, `GRADUADAS ......... ${ctx.cartas.filter(c => c.graduada).length}`, `SETS .............. ${sets}`] }
+    }
+    case 'cajas':
+      return { lineas: ctx.cajas.length ? ctx.cajas.map(c => `  ${c.nombre.toUpperCase().padEnd(18)} ${String(c.cartas.length).padStart(2)} / 25`) : ['NO HAY CAJAS. CAJA NUEVA <NOMBRE>.'] }
+    case 'caja': {
+      const m = arg.match(/^nueva\s+(.+)$/i)
+      if (!m) return { lineas: ['USO: CAJA NUEVA <NOMBRE>'] }
+      ctx.crearCaja(m[1])
+      return { lineas: [`CAJA ${m[1].toUpperCase()} LISTA EN LA BALDA DE ABAJO DEL EXPOSITOR.`] }
+    }
+    case 'valor':
+      return {
+        lineas: [`CONSULTANDO CARDMARKET PARA ${ctx.cartas.length} CARTAS...`],
+        despues: Promise.all(ctx.cartas.map(c => ctx.precio(c.tcgdex).then(p => ({ c, p })))).then(r => {
+          const con = r.filter(x => x.p != null) as { c: Carta; p: number }[]
+          const total = con.reduce((s, x) => s + x.p, 0)
+          const top = [...con].sort((a, b) => b.p - a.p).slice(0, 3)
+          return {
+            lineas: [
+              `VALOR TOTAL ....... ${total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`,
+              `SIN PRECIO ........ ${r.length - con.length}`,
+              'LAS MAS VALIOSAS:',
+              ...top.map(x => `  ${x.c.nombre.toUpperCase().padEnd(22)} ${x.p.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`),
+              '(PRECIO MEDIO DE CARDMARKET VIA TCGDEX)',
+            ],
+          }
+        }),
+      }
     case 'creditos':
-      return { lineas: ['BIBLIOTEC SE APOYA EN:', '  THREE.JS, REACT THREE FIBER, DREI (MIT)', '  OPEN LIBRARY (PORTADAS Y DATOS)', '  POPPINS Y VT323 (OFL)', 'LISTA COMPLETA EN CREDITOS.MD'] }
+      return { lineas: ['BIBLIOTEC SE APOYA EN:', '  THREE.JS, REACT THREE FIBER, DREI (MIT)', '  OPEN LIBRARY (PORTADAS Y DATOS)',
+  '  TCGDEX (CARTAS POKEMON Y PRECIOS)', '  POPPINS Y VT323 (OFL)', 'LISTA COMPLETA EN CREDITOS.MD'] }
     case 'limpiar': case 'cls': case 'clear':
       return { lineas: [], limpiar: true }
     case 'salir': case 'exit': case 'q':
