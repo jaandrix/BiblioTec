@@ -5,7 +5,7 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { cambiarEstado, leerEstado } from '../estado'
 import type { Caja } from '../tipos'
 import { SALA } from './distribucion'
-import { control, mallasLibros } from './registro'
+import { control, huecoDe, interactivos, mallasLibros } from './registro'
 
 const RADIO = 0.28
 const ALTURA_OJOS = 1.6
@@ -32,25 +32,35 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   const lado = useMemo(() => new Vector3(), [])
 
   useEffect(() => {
-    camera.position.set(0, ALTURA_OJOS, -2.6)
-    camera.lookAt(0, 1.3, -4.5)
+    camera.position.set(0.8, ALTURA_OJOS, 2.8)
+    camera.lookAt(0, 1.3, -2)
     const mando = new PointerLockControls(camera, gl.domElement)
     control.mando = mando
     control.camara = camera as PerspectiveCamera
     if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros } })
-    const alEntrar = () => cambiarEstado({ dentro: true })
+    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null })
     const alSalir = () => cambiarEstado({ dentro: false, apuntado: null })
     mando.addEventListener('lock', alEntrar)
     mando.addEventListener('unlock', alSalir)
 
-    const abajo = (e: KeyboardEvent) => teclas.current.add(e.code)
+    const abajo = (e: KeyboardEvent) => {
+      teclas.current.add(e.code)
+      if (e.code === 'KeyO' && mando.isLocked) {
+        const { apuntado } = leerEstado()
+        const hueco = apuntado ? huecoDe(apuntado) : null
+        if (!hueco) return
+        cambiarEstado({ menuOrden: hueco.seccion, apuntado: null })
+        mando.unlock()
+      }
+    }
     const arriba = (e: KeyboardEvent) => teclas.current.delete(e.code)
     const perderFoco = () => teclas.current.clear()
     const clic = (e: MouseEvent) => {
       if (e.button !== 0 || !mando.isLocked) return
       const { apuntado } = leerEstado()
       if (!apuntado) return
-      cambiarEstado({ abierto: apuntado, apuntado: null })
+      if (apuntado === 'terminal') cambiarEstado({ terminal: true, apuntado: null })
+      else cambiarEstado({ abierto: apuntado, apuntado: null })
       mando.unlock()
     }
     window.addEventListener('keydown', abajo)
@@ -70,8 +80,8 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   }, [camera, gl])
 
   useFrame((_, dt) => {
-    const { dentro, abierto } = leerEstado()
-    if (!dentro || abierto) return
+    const { dentro, abierto, terminal, menuOrden } = leerEstado()
+    if (!dentro || abierto || terminal || menuOrden) return
     const t = teclas.current
     const avance = (t.has('KeyW') || t.has('ArrowUp') ? 1 : 0) - (t.has('KeyS') || t.has('ArrowDown') ? 1 : 0)
     const giro = (t.has('KeyD') || t.has('ArrowRight') ? 1 : 0) - (t.has('KeyA') || t.has('ArrowLeft') ? 1 : 0)
@@ -88,7 +98,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     }
     rayo.setFromCamera(centro, camera)
     rayo.far = ALCANCE
-    const golpe = rayo.intersectObjects([...mallasLibros.values()], false)[0]
+    const golpe = rayo.intersectObjects([...mallasLibros.values(), ...interactivos.values()], true)[0]
     cambiarEstado({ apuntado: (golpe?.object.userData.id as string) ?? null })
   })
 

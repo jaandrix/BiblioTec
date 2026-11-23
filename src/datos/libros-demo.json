@@ -8,7 +8,9 @@
     "paginas": 604,
     "portada": "https://covers.openlibrary.org/b/id/11481354-L.jpg",
     "saga": "Dune",
-    "tomo": 1
+    "tomo": 1,
+    "genero": "ciencia ficción",
+    "alta": "2025-01-06"
   },
   {
     "id": "demo_OL893461W",
@@ -19,7 +21,9 @@
     "paginas": 279,
     "portada": "https://covers.openlibrary.org/b/id/980253-L.jpg",
     "saga": "Dune",
-    "tomo": 2
+    "tomo": 2,
+    "genero": "ciencia ficción",
+    "alta": "2025-05-05"
   },
   {
     "id": "demo_OL893516W",
@@ -30,7 +34,9 @@
     "paginas": 504,
     "portada": "https://covers.openlibrary.org/b/id/6976407-L.jpg",
     "saga": "Dune",
-    "tomo": 3
+    "tomo": 3,
+    "genero": "ciencia ficción",
+    "alta": "2025-09-01"
   },
   {
     "id": "demo_OL82563W",
@@ -41,7 +47,9 @@
     "paginas": 302,
     "portada": "https://covers.openlibrary.org/b/id/15155833-L.jpg",
     "saga": "Harry Potter",
-    "tomo": 1
+    "tomo": 1,
+    "genero": "fantasía",
+    "alta": "2025-03-04"
   },
   {
     "id": "demo_OL82537W",
@@ -52,7 +60,9 @@
     "paginas": 339,
     "portada": "https://covers.openlibrary.org/b/id/15158664-L.jpg",
     "saga": "Harry Potter",
-    "tomo": 2
+    "tomo": 2,
+    "genero": "fantasía",
+    "alta": "2025-07-01"
   },
   {
     "id": "demo_OL82536W",
@@ -63,7 +73,9 @@
     "paginas": 416,
     "portada": "https://covers.openlibrary.org/b/id/10580435-L.jpg",
     "saga": "Harry Potter",
-    "tomo": 3
+    "tomo": 3,
+    "genero": "fantasía",
+    "alta": "2025-10-28"
   },
   {
     "id": "demo_OL82560W",
@@ -74,7 +86,9 @@
     "paginas": 672,
     "portada": "https://covers.openlibrary.org/b/id/12059372-L.jpg",
     "saga": "Harry Potter",
-    "tomo": 4
+    "tomo": 4,
+    "genero": "fantasía",
+    "alta": "2025-04-30"
   },
   {
     "id": "demo_OL27513W",
@@ -85,7 +99,9 @@
     "paginas": 492,
     "portada": "https://covers.openlibrary.org/b/id/14627060-L.jpg",
     "saga": "El Señor de los Anillos",
-    "tomo": 1
+    "tomo": 1,
+    "genero": "fantasía",
+    "alta": "2025-08-27"
   },
   {
     "id": "demo_OL27479W",
@@ -96,7 +112,9 @@
     "paginas": 434,
     "portada": "https://covers.openlibrary.org/b/id/14627564-L.jpg",
     "saga": "El Señor de los Anillos",
-    "tomo": 2
+    "tomo": 2,
+    "genero": "fantasía",
+    "alta": "2025-02-27"
   },
   {
     "id": "demo_OL27455W",
@@ -107,7 +125,9 @@
     "paginas": 499,
     "portada": "https://covers.openlibrary.org/b/id/14627062-L.jpg",
     "saga": "El Señor de los Anillos",
-    "tomo": 3
+    "tomo": 3,
+    "genero": "fantasía",
+    "alta": "2025-06-26"
   },
   {
     "id": "demo_OL27482W",
@@ -116,7 +136,9 @@
     "autor": "J.R.R. Tolkien",
     "anio": 1937,
     "paginas": 310,
-    "portada": "https://covers.openlibrary.org/b/id/14627509-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/14627509-L.jpg",
+    "genero": "fantasía",
+    "alta": "2025-10-23"
   },
   {
     "id": "demo_OL257943W",
@@ -127,7 +149,9 @@
     "paginas": 801,
     "portada": "https://covers.openlibrary.org/b/id/9269962-L.jpg",
     "saga": "Canción de hielo y fuego",
-    "tomo": 1
+    "tomo": 1,
+    "genero": "fantasía",
+    "alta": "2025-04-25"
   },
   {
     "id": "demo_OL257939W",
@@ -138,7 +162,9 @@
     "paginas": 761,
     "portada": "https://covers.openlibrary.org/b/id/8231751-L.jpg",
     "saga": "Canción de hielo y fuego",
-    "tomo": 2
+    "tomo": 2,
+    "genero": "fantasía",
+    "alta": "2025-08-22"
   },
   {
     "id": "demo_OL274505W",
@@ -147,7 +173,9 @@
     "autor": "Gabriel García Márquez",
     "anio": 1967,
     "paginas": 432,
-    "portada": "https://covers.openlibrary.org/b/id/12627383-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12627383-L.jpg",
+    "genero": "novela",
+    "alta": "2025-02-22"
   },
   {
     "id": "demo_OL274518W",
@@ -156,7 +184,9 @@
     "autor": "Gabriel García Márquez",
     "anio": 1985,
     "paginas": 451,
-    "portada": "https://covers.openlibrary.org/b/id/10096404-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/10096404-L.jpg",
+    "genero": "novela",
+    "alta": "2025-06-21"
   },
   {
     "id": "demo_OL503666W",
@@ -165,7 +195,9 @@
     "autor": "Miguel de Cervantes Saavedra",
     "anio": 1600,
     "paginas": 519,
-    "portada": "https://covers.openlibrary.org/b/id/14428305-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/14428305-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-10-18"
   },
   {
     "id": "demo_OL278437W",
@@ -174,7 +206,9 @@
     "autor": "Carlos Ruiz Zafón",
     "anio": 2001,
     "paginas": 528,
-    "portada": "https://covers.openlibrary.org/b/id/10107644-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/10107644-L.jpg",
+    "genero": "novela",
+    "alta": "2025-04-20"
   },
   {
     "id": "demo_OL15165640W",
@@ -183,7 +217,9 @@
     "autor": "Carlos Ruiz Zafón",
     "anio": 2008,
     "paginas": 641,
-    "portada": "https://covers.openlibrary.org/b/id/9274818-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/9274818-L.jpg",
+    "genero": "novela",
+    "alta": "2025-08-17"
   },
   {
     "id": "demo_OL11326416W",
@@ -192,7 +228,9 @@
     "autor": "Michael Dean",
     "anio": 2003,
     "paginas": 72,
-    "portada": "https://covers.openlibrary.org/b/id/8745958-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/8745958-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-02-17"
   },
   {
     "id": "demo_OL1168007W",
@@ -201,7 +239,9 @@
     "autor": "George Orwell",
     "anio": 1945,
     "paginas": 128,
-    "portada": "https://covers.openlibrary.org/b/id/11261770-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/11261770-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-06-16"
   },
   {
     "id": "demo_OL64365W",
@@ -210,7 +250,9 @@
     "autor": "Aldous Huxley",
     "anio": 1932,
     "paginas": 241,
-    "portada": "https://covers.openlibrary.org/b/id/8231823-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/8231823-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-10-13"
   },
   {
     "id": "demo_OL103123W",
@@ -219,7 +261,9 @@
     "autor": "Ray Bradbury",
     "anio": 1953,
     "paginas": 190,
-    "portada": "https://covers.openlibrary.org/b/id/12993656-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12993656-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-04-15"
   },
   {
     "id": "demo_OL468431W",
@@ -228,7 +272,9 @@
     "autor": "F. Scott Fitzgerald",
     "anio": 1920,
     "paginas": 185,
-    "portada": "https://covers.openlibrary.org/b/id/10590366-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/10590366-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-08-12"
   },
   {
     "id": "demo_OL66554W",
@@ -237,7 +283,9 @@
     "autor": "Jane Austen",
     "anio": 1813,
     "paginas": 351,
-    "portada": "https://covers.openlibrary.org/b/id/14348537-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/14348537-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-02-12"
   },
   {
     "id": "demo_OL1095427W",
@@ -246,7 +294,9 @@
     "autor": "Charlotte Brontë",
     "anio": 1847,
     "paginas": 480,
-    "portada": "https://covers.openlibrary.org/b/id/8235363-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/8235363-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-06-11"
   },
   {
     "id": "demo_OL450063W",
@@ -255,7 +305,9 @@
     "autor": "Mary Shelley",
     "anio": 1818,
     "paginas": 240,
-    "portada": "https://covers.openlibrary.org/b/id/12356249-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12356249-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-10-08"
   },
   {
     "id": "demo_OL85892W",
@@ -264,7 +316,9 @@
     "autor": "Bram Stoker",
     "anio": 1897,
     "paginas": 384,
-    "portada": "https://covers.openlibrary.org/b/id/12216503-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12216503-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-04-10"
   },
   {
     "id": "demo_OL45018229W",
@@ -273,7 +327,9 @@
     "autor": "Fyodor Dostoevsky",
     "anio": 1956,
     "paginas": 582,
-    "portada": "https://covers.openlibrary.org/b/id/15183762-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/15183762-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-08-07"
   },
   {
     "id": "demo_OL24259583W",
@@ -282,7 +338,9 @@
     "autor": "Antoine de Saint-Exupéry",
     "anio": 2003,
     "paginas": 10,
-    "portada": "https://covers.openlibrary.org/b/id/10746692-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/10746692-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-02-07"
   },
   {
     "id": "demo_OL34766796W",
@@ -291,7 +349,9 @@
     "autor": "Antoine de Saint-Exupéry",
     "anio": 2018,
     "paginas": 110,
-    "portada": "https://covers.openlibrary.org/b/id/13499066-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/13499066-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-06-06"
   },
   {
     "id": "demo_OL872932W",
@@ -300,7 +360,9 @@
     "autor": "Hermann Hesse",
     "anio": 1922,
     "paginas": 139,
-    "portada": "https://covers.openlibrary.org/b/id/6562535-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/6562535-L.jpg",
+    "genero": "clásicos",
+    "alta": "2025-10-03"
   },
   {
     "id": "demo_OL17075811W",
@@ -309,7 +371,9 @@
     "autor": "Yuval Noah Harari",
     "anio": 2011,
     "paginas": 456,
-    "portada": "https://covers.openlibrary.org/b/id/8634250-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/8634250-L.jpg",
+    "genero": "ensayo",
+    "alta": "2025-04-05"
   },
   {
     "id": "demo_OL21745884W",
@@ -318,7 +382,9 @@
     "autor": "Andy Weir",
     "anio": 2021,
     "paginas": 496,
-    "portada": "https://covers.openlibrary.org/b/id/11200092-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/11200092-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-08-02"
   },
   {
     "id": "demo_OL17091839W",
@@ -327,7 +393,9 @@
     "autor": "Andy Weir",
     "anio": 2011,
     "paginas": 407,
-    "portada": "https://covers.openlibrary.org/b/id/11447888-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/11447888-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-02-02"
   },
   {
     "id": "demo_OL8479867W",
@@ -336,7 +404,9 @@
     "autor": "Patrick Rothfuss",
     "anio": 2007,
     "paginas": 736,
-    "portada": "https://covers.openlibrary.org/b/id/11480483-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/11480483-L.jpg",
+    "genero": "fantasía",
+    "alta": "2025-06-01"
   },
   {
     "id": "demo_OL16044142W",
@@ -345,7 +415,9 @@
     "autor": "Brandon Sanderson",
     "anio": 2001,
     "paginas": 1712,
-    "portada": "https://covers.openlibrary.org/b/id/11329782-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/11329782-L.jpg",
+    "genero": "fantasía",
+    "alta": "2025-09-28"
   },
   {
     "id": "demo_OL15358691W",
@@ -354,7 +426,9 @@
     "autor": "Brandon Sanderson",
     "anio": 2010,
     "paginas": 1008,
-    "portada": "https://covers.openlibrary.org/b/id/14658316-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/14658316-L.jpg",
+    "genero": "fantasía",
+    "alta": "2025-03-31"
   },
   {
     "id": "demo_OL27258W",
@@ -363,7 +437,9 @@
     "autor": "William Gibson",
     "anio": 1984,
     "paginas": 317,
-    "portada": "https://covers.openlibrary.org/b/id/283860-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/283860-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-07-28"
   },
   {
     "id": "demo_OL46125W",
@@ -372,7 +448,9 @@
     "autor": "Isaac Asimov",
     "anio": 1951,
     "paginas": 240,
-    "portada": "https://covers.openlibrary.org/b/id/14612610-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/14612610-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-01-28"
   },
   {
     "id": "demo_OL46241W",
@@ -381,7 +459,9 @@
     "autor": "Isaac Asimov",
     "anio": 1950,
     "paginas": 245,
-    "portada": "https://covers.openlibrary.org/b/id/12385229-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12385229-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-05-27"
   },
   {
     "id": "demo_OL2163649W",
@@ -390,7 +470,9 @@
     "autor": "Douglas Adams",
     "anio": 1979,
     "paginas": 216,
-    "portada": "https://covers.openlibrary.org/b/id/12986869-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12986869-L.jpg",
+    "genero": "ciencia ficción",
+    "alta": "2025-09-23"
   },
   {
     "id": "demo_OL2625457W",
@@ -399,7 +481,9 @@
     "autor": "村上春樹",
     "anio": 1987,
     "paginas": 389,
-    "portada": "https://covers.openlibrary.org/b/id/2237620-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/2237620-L.jpg",
+    "genero": "novela",
+    "alta": "2025-03-26"
   },
   {
     "id": "demo_OL1905255W",
@@ -408,7 +492,9 @@
     "autor": "Isabel Allende",
     "anio": 1982,
     "paginas": 453,
-    "portada": "https://covers.openlibrary.org/b/id/3205226-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/3205226-L.jpg",
+    "genero": "novela",
+    "alta": "2025-07-23"
   },
   {
     "id": "demo_OL14860424W",
@@ -417,7 +503,9 @@
     "autor": "Julio Cortázar",
     "anio": 1963,
     "paginas": 633,
-    "portada": "https://covers.openlibrary.org/b/id/1047466-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/1047466-L.jpg",
+    "genero": "novela",
+    "alta": "2025-01-23"
   },
   {
     "id": "demo_OL110971W",
@@ -426,7 +514,9 @@
     "autor": "Jorge Luis Borges",
     "anio": 1945,
     "paginas": 196,
-    "portada": "https://covers.openlibrary.org/b/id/10832290-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/10832290-L.jpg",
+    "genero": "novela",
+    "alta": "2025-05-22"
   },
   {
     "id": "demo_OL26387829W",
@@ -435,7 +525,9 @@
     "autor": "Fernando Aramburu",
     "anio": 2014,
     "paginas": 647,
-    "portada": "https://covers.openlibrary.org/b/id/12334964-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/12334964-L.jpg",
+    "genero": "novela",
+    "alta": "2025-09-18"
   },
   {
     "id": "demo_OL20770492W",
@@ -444,6 +536,8 @@
     "autor": "Irene Vallejo",
     "anio": 2020,
     "paginas": 464,
-    "portada": "https://covers.openlibrary.org/b/id/9689877-L.jpg"
+    "portada": "https://covers.openlibrary.org/b/id/9689877-L.jpg",
+    "genero": "ensayo",
+    "alta": "2025-03-21"
   }
 ]

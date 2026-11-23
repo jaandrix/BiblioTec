@@ -13,7 +13,18 @@ function guardar() {
 export function colorDeReserva(texto: string) {
   let h = 0
   for (const c of texto) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return `hsl(${h % 360}, 35%, 38%)`
+  const tono = (h % 360) / 360, s = 0.35, l = 0.38
+  const q = l + s - l * s, p = 2 * l - q
+  const canal = (t: number) => {
+    t = (t + 1) % 1
+    const v = t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p
+    return Math.round(v * 255).toString(16).padStart(2, '0')
+  }
+  return '#' + canal(tono + 1 / 3) + canal(tono) + canal(tono - 1 / 3)
+}
+
+export function colorDeLibro(libro: { portada: string | null; titulo: string }) {
+  return colorGuardado(libro.portada) ?? colorDeReserva(libro.titulo)
 }
 
 export function colorGuardado(url: string | null) {

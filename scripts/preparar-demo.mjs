@@ -41,5 +41,6 @@ for (const [titulo, autor, saga, tomo] of LIBROS) {
   console.log('ok', d.title);
   await new Promise(res => setTimeout(res, 400));
 }
+// Después se añadieron a mano `genero` y `alta` (fecha de alta inventada) a cada libro.
 await writeFile(new URL('../src/datos/libros-demo.json', import.meta.url), JSON.stringify(salida, null, 2) + '\n');
 console.log(salida.length, 'libros');

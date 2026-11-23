@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { cambiarEstado, useEstado } from '../estado'
-import { entrar, giroInspeccion } from '../escena/registro'
+import { entrar, giroInspeccion, huecoDe } from '../escena/registro'
 import type { Libro } from '../tipos'
+import { MenuOrden } from './MenuOrden'
+import { Terminal } from './Terminal'
 
 function Fila({ etiqueta, valor }: { etiqueta: string; valor: string | number | null | undefined }) {
   return (
@@ -13,6 +15,7 @@ function Fila({ etiqueta, valor }: { etiqueta: string; valor: string | number | 
 }
 
 function Ficha({ libro }: { libro: Libro }) {
+  const h = huecoDe(libro.id)
   return (
     <aside className="ficha" onMouseDown={e => e.stopPropagation()}>
       <h1>{libro.titulo}</h1>
@@ -21,6 +24,7 @@ function Ficha({ libro }: { libro: Libro }) {
         <Fila etiqueta="año." valor={libro.anio} />
         <Fila etiqueta="páginas." valor={libro.paginas} />
         {libro.saga && <Fila etiqueta="saga." valor={`${libro.saga}, ${libro.tomo}`} />}
+        {h && <Fila etiqueta="aquí." valor={`${h.seccion}, mueble ${h.modulo + 1}, balda ${h.balda}`} />}
         <Fila etiqueta="en casa." valor={libro.ubicacion ?? 'sin ubicación.'} />
       </div>
       <button onClick={() => cambiarEstado({ abierto: null })}>devolver a la balda.</button>
@@ -33,6 +37,8 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
   const dentro = useEstado(e => e.dentro)
   const abierto = useEstado(e => e.abierto)
   const apuntado = useEstado(e => e.apuntado)
+  const terminal = useEstado(e => e.terminal)
+  const menuOrden = useEstado(e => e.menuOrden)
   const libro = abierto ? libros.find(l => l.id === abierto) : null
   const arrastre = useRef<{ x: number; y: number; movido: boolean } | null>(null)
 
@@ -70,11 +76,18 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
     }
   }, [abierto])
 
+  const pista = !apuntado ? null : apuntado === 'terminal'
+    ? <><kbd>clic</kbd> usar el ordenador</>
+    : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
+
   return (
     <>
       {dentro && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
+      {dentro && pista && <div className="pista-mirilla">{pista}</div>}
       {libro && <Ficha libro={libro} />}
-      {!dentro && !libro && (
+      {terminal && <Terminal />}
+      {menuOrden && <MenuOrden seccion={menuOrden} />}
+      {!dentro && !libro && !terminal && !menuOrden && (
         <div className="portada" onClick={entrar}>
           <div className="caja">
             <h1>bibliotec.</h1>
@@ -82,7 +95,8 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
             <ul>
               <li><kbd>w a s d</kbd> moverse, <kbd>mayús</kbd> correr</li>
               <li><kbd>ratón</kbd> mirar</li>
-              <li><kbd>clic</kbd> sacar un libro</li>
+              <li><kbd>clic</kbd> sacar un libro, usar el ordenador</li>
+              <li><kbd>o</kbd> ordenar la estantería que miras</li>
               <li><kbd>esc</kbd> salir</li>
             </ul>
           </div>

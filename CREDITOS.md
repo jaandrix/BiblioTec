@@ -8,6 +8,7 @@ BiblioTec se apoya en el trabajo de otras personas. Gracias.
 | [React Three Fiber](https://github.com/pmndrs/react-three-fiber) y [Drei](https://github.com/pmndrs/drei) | Escena 3D con React | MIT |
 | [Open Library](https://openlibrary.org) | Datos y portadas de libros | Datos abiertos (Internet Archive) |
 | [Poppins](https://fonts.google.com/specimen/Poppins) | Tipografía | OFL |
+| [VT323](https://fonts.google.com/specimen/VT323) | Letra del ordenador retro | OFL |
 
 Referencias estudiadas (sin copiar su código): [MengTo/complete-shelf](https://github.com/MengTo/complete-shelf), [mawise/bookshelf](https://github.com/mawise/bookshelf).
 
