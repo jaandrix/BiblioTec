@@ -1,31 +1,47 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { Euler, Mesh, MeshStandardMaterial, Quaternion, SRGBColorSpace, TextureLoader, Vector3 } from 'three'
+import { cambiarEstado, leerEstado, useEstado } from '../estado'
 import { colorDeLibro, colorDominante } from '../libros/color'
 import { texturaLomo } from '../libros/lomo'
-import { cambiarEstado, leerEstado, useEstado } from '../estado'
-import type { Hueco } from '../tipos'
+import type { Hueco, Libro as TLibro } from '../tipos'
+import { huecoCarro } from './Carro'
+import { altoLibro, grosorLibro, PROFUNDIDAD_LIBRO } from './distribucion'
 import { control, giroInspeccion, mallasLibros } from './registro'
+
+export type Destino =
+  | { tipo: 'balda'; hueco: Hueco }
+  | { tipo: 'carro'; indice: number }
+  | { tipo: 'mesa'; posicion: [number, number, number]; giro: number }
 
 const PAPEL = '#efe6d0'
 const SACAR = 0.13
-const DURACION_ABRIR = 0.7
-const DURACION_CERRAR = 0.45
-const DURACION_MOVER = 0.75
 const ARRIBA = new Vector3(0, 1, 0)
+const DELANTE = new Vector3(0, 0, 1)
 const GIRO_PORTADA = new Quaternion().setFromAxisAngle(ARRIBA, -Math.PI / 2)
+const TUMBADO = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2)
 const cargador = new TextureLoader().setCrossOrigin('anonymous')
 
 const curva = (t: number) => 1 - (1 - t) ** 3
 const curvaSuave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
-type Fase = 'reposo' | 'abriendo' | 'cerrando' | 'moviendo'
+function firma(d: Destino) {
+  if (d.tipo === 'balda') return `b${d.hueco.posicion.join(',')}`
+  if (d.tipo === 'carro') return `c${d.indice}`
+  return `m${d.posicion.join(',')}`
+}
 
-export function Libro({ hueco }: { hueco: Hueco }) {
-  const { libro, posicion, medidas, giro, orden } = hueco
+type Fase = 'reposo' | 'viaje' | 'abriendo'
+
+export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
   const malla = useRef<Mesh>(null!)
   const apuntado = useEstado(e => e.apuntado === libro.id)
   const abierto = useEstado(e => e.abierto === libro.id)
+  const grosor = grosorLibro(libro)
+  const alto = altoLibro(libro)
+  const medidas = useMemo<[number, number, number]>(() => [grosor, alto, PROFUNDIDAD_LIBRO], [grosor, alto])
+  const destinoRef = useRef(destino)
+  destinoRef.current = destino
 
   const materiales = useMemo(() => {
     const color = colorDeLibro(libro)
@@ -35,7 +51,6 @@ export function Libro({ hueco }: { hueco: Hueco }) {
     return [tapa(), tapa(), papel, papel, tapa(), papel]
   }, [libro])
 
-  const [grosor, alto] = medidas
   useEffect(() => {
     let vivo = true
     const pintar = (fondo: string) => {
@@ -55,9 +70,11 @@ export function Libro({ hueco }: { hueco: Hueco }) {
     return () => { vivo = false }
   }, [libro, materiales, grosor, alto])
 
-  // La portada en alta solo se baja al abrir el libro.
+  // La portada en alta solo se baja cuando se va a ver: al abrir o si el libro
+  // espera tumbado en la mesa de la entrada, con la portada hacia arriba.
+  const verPortada = abierto || destino.tipo === 'mesa'
   useEffect(() => {
-    if (!abierto || !libro.portada || materiales[0].map) return
+    if (!verPortada || !libro.portada || materiales[0].map) return
     cargador.load(libro.portada, tex => {
       tex.colorSpace = SRGBColorSpace
       tex.anisotropy = 8
@@ -65,7 +82,7 @@ export function Libro({ hueco }: { hueco: Hueco }) {
       materiales[0].color.set('#ffffff')
       materiales[0].needsUpdate = true
     })
-  }, [abierto, libro, materiales])
+  }, [verPortada, libro, materiales])
 
   useEffect(() => {
     const m = malla.current
@@ -74,41 +91,72 @@ export function Libro({ hueco }: { hueco: Hueco }) {
     return () => { mallasLibros.delete(libro.id) }
   }, [libro.id])
 
-  const casa = useMemo(() => new Vector3(...posicion), [posicion])
-  const normal = useMemo(() => new Vector3(Math.sin(giro), 0, Math.cos(giro)), [giro])
-  const reposo = useMemo(() => new Quaternion().setFromAxisAngle(ARRIBA, giro), [giro])
-  const fuera = useMemo(() => casa.clone().addScaledVector(normal, SACAR), [casa, normal])
+  const objetivo = useMemo(() => {
+    const pos = new Vector3(), rot = new Quaternion(), normal = new Vector3()
+    return (d: Destino) => {
+      if (d.tipo === 'balda') {
+        pos.set(...d.hueco.posicion)
+        rot.setFromAxisAngle(ARRIBA, d.hueco.giro)
+      } else if (d.tipo === 'mesa') {
+        pos.set(...d.posicion)
+        rot.setFromAxisAngle(ARRIBA, d.giro).multiply(TUMBADO)
+      } else {
+        const carro = control.carro
+        pos.set(...huecoCarro(d.indice, alto))
+        if (carro) { carro.localToWorld(pos); rot.copy(carro.quaternion) } else rot.identity()
+      }
+      normal.copy(DELANTE).applyQuaternion(rot)
+      return { pos, rot, normal }
+    }
+  }, [alto])
 
   const anim = useRef({
     fase: 'reposo' as Fase,
     t: 0,
     duracion: 1,
+    elevar: 0.03,
+    firma: '',
     desdePos: new Vector3(),
     desdeRot: new Quaternion(),
-    destinoPos: new Vector3(),
-    destinoRot: new Quaternion(),
     normalDesde: new Vector3(),
-    primera: true,
+    abrirPos: new Vector3(),
+    abrirRot: new Quaternion(),
   })
+
+  const empezarViaje = (desdeTipo: string | null) => {
+    const a = anim.current
+    const m = malla.current
+    const d = destinoRef.current
+    a.desdePos.copy(m.position)
+    a.desdeRot.copy(m.quaternion)
+    a.normalDesde.copy(DELANTE).applyQuaternion(m.quaternion)
+    const objetivoPos = objetivo(d).pos
+    const lejos = a.desdePos.distanceTo(objetivoPos)
+    a.duracion = Math.min(1.1, 0.45 + lejos * 0.12)
+    const entreBaldas = desdeTipo === 'b' && d.tipo === 'balda'
+    a.elevar = entreBaldas ? 0.03 : Math.min(0.35, 0.08 + lejos * 0.06)
+    // Al reordenar, en cascada, para que se vea la estantería moverse.
+    a.t = entreBaldas ? -Math.min(d.hueco.orden * 0.018, 0.9) / a.duracion : 0
+    a.fase = 'viaje'
+  }
 
   useEffect(() => {
     const a = anim.current
     const m = malla.current
-    if (a.primera) {
-      a.primera = false
-      m.position.copy(casa)
-      m.quaternion.copy(reposo)
+    const nueva = firma(destino)
+    if (!a.firma) {
+      const { pos, rot } = objetivo(destino)
+      m.position.copy(pos)
+      m.quaternion.copy(rot)
+      a.firma = nueva
       return
     }
-    if (a.fase === 'abriendo' || leerEstado().abierto === libro.id) return
-    // Recolocar al reordenar: en cascada, para que se vea la estantería moverse.
-    a.desdePos.copy(m.position)
-    a.desdeRot.copy(m.quaternion)
-    a.normalDesde.set(0, 0, 1).applyQuaternion(m.quaternion)
-    a.duracion = DURACION_MOVER
-    a.t = -Math.min(orden * 0.018, 0.9) / DURACION_MOVER
-    a.fase = 'moviendo'
-  }, [casa, reposo, orden, libro.id])
+    if (nueva === a.firma) return
+    const antes = a.firma[0]
+    a.firma = nueva
+    if (a.fase === 'abriendo') return
+    empezarViaje(antes)
+  })
 
   useEffect(() => {
     const a = anim.current
@@ -119,26 +167,24 @@ export function Libro({ hueco }: { hueco: Hueco }) {
       const cam = control.camara!
       const delante = new Vector3(0, 0, -1).applyQuaternion(cam.quaternion)
       const izquierda = new Vector3(-1, 0, 0).applyQuaternion(cam.quaternion)
-      a.destinoPos.copy(cam.position).addScaledVector(delante, 0.42).addScaledVector(izquierda, 0.07)
-      a.destinoRot.copy(cam.quaternion).multiply(GIRO_PORTADA)
+      a.abrirPos.copy(cam.position).addScaledVector(delante, 0.42).addScaledVector(izquierda, 0.07)
+      a.abrirRot.copy(cam.quaternion).multiply(GIRO_PORTADA)
       giroInspeccion.x = 0
       giroInspeccion.y = 0
       a.t = 0
-      a.duracion = DURACION_ABRIR
+      a.duracion = 0.7
       a.fase = 'abriendo'
       if (leerEstado().guia === libro.id) cambiarEstado({ guia: null })
-    } else if (a.fase === 'abriendo' || !m.position.equals(casa)) {
-      if (a.fase === 'moviendo') return
-      a.desdePos.copy(m.position)
-      a.desdeRot.copy(m.quaternion)
-      a.t = 0
-      a.duracion = DURACION_CERRAR
-      a.fase = 'cerrando'
+    } else if (a.fase === 'abriendo') {
+      empezarViaje(null)
+      a.duracion = 0.5
+      a.elevar = 0
     }
-  }, [abierto, casa, libro.id])
+  }, [abierto, libro.id])
 
   const tmpRot = useMemo(() => new Quaternion(), [])
   const tmpGiro = useMemo(() => new Quaternion(), [])
+  const fuera = useMemo(() => new Vector3(), [])
   const euler = useMemo(() => new Euler(), [])
 
   useFrame(({ clock }, dt) => {
@@ -147,46 +193,48 @@ export function Libro({ hueco }: { hueco: Hueco }) {
     const guiando = leerEstado().guia === libro.id
     const brillo = guiando ? 0.35 + 0.35 * Math.sin(clock.elapsedTime * 5) : 0
     for (const i of [0, 1, 4]) materiales[i].emissiveIntensity = brillo
+    const d = destinoRef.current
+    const { pos, rot, normal } = objetivo(d)
 
     if (a.fase === 'abriendo') {
       a.t = Math.min(1, a.t + dt / a.duracion)
       euler.set(giroInspeccion.x, giroInspeccion.y, 0)
-      tmpRot.copy(a.destinoRot).multiply(tmpGiro.setFromEuler(euler))
+      tmpRot.copy(a.abrirRot).multiply(tmpGiro.setFromEuler(euler))
       // Primero sale de la balda, luego vuela hacia ti girando hasta enseñar la portada.
+      fuera.copy(a.desdePos).addScaledVector(a.normalDesde, SACAR)
       if (a.t < 0.3) {
         m.position.lerpVectors(a.desdePos, fuera, curva(a.t / 0.3))
       } else {
         const p = curva((a.t - 0.3) / 0.7)
-        m.position.lerpVectors(fuera, a.destinoPos, p)
+        m.position.lerpVectors(fuera, a.abrirPos, p)
         m.quaternion.slerpQuaternions(a.desdeRot, tmpRot, p)
       }
       if (a.t >= 1) m.quaternion.copy(tmpRot)
-    } else if (a.fase === 'cerrando') {
-      a.t = Math.min(1, a.t + dt / a.duracion)
-      if (a.t < 0.7) {
-        const p = curva(a.t / 0.7)
-        m.position.lerpVectors(a.desdePos, fuera, p)
-        m.quaternion.slerpQuaternions(a.desdeRot, reposo, p)
-      } else {
-        m.position.lerpVectors(fuera, casa, curva((a.t - 0.7) / 0.3))
-        m.quaternion.copy(reposo)
-      }
-      if (a.t >= 1) a.fase = 'reposo'
-    } else if (a.fase === 'moviendo') {
+      return
+    }
+
+    if (a.fase === 'viaje') {
       a.t = Math.min(1, a.t + dt / a.duracion)
       if (a.t <= 0) return
       const p = curvaSuave(a.t)
-      const arco = Math.sin(Math.PI * p) * 0.14
-      m.position.lerpVectors(a.desdePos, casa, p)
-      m.position.addScaledVector(a.normalDesde, arco * (1 - p)).addScaledVector(normal, arco * p)
-      m.position.y += Math.sin(Math.PI * p) * 0.03
-      m.quaternion.slerpQuaternions(a.desdeRot, reposo, p)
+      const arco = Math.sin(Math.PI * p)
+      m.position.lerpVectors(a.desdePos, pos, p)
+      m.position.addScaledVector(a.normalDesde, arco * 0.14 * (1 - p)).addScaledVector(normal, arco * 0.14 * p)
+      m.position.y += arco * a.elevar
+      m.quaternion.slerpQuaternions(a.desdeRot, rot, p)
       if (a.t >= 1) a.fase = 'reposo'
-    } else {
+      return
+    }
+
+    m.quaternion.copy(rot)
+    if (d.tipo === 'balda') {
       const sale = apuntado ? 0.025 : 0
-      const actual = m.position.clone().sub(casa).dot(normal)
+      const actual = m.position.clone().sub(pos).dot(normal)
       const siguiente = actual + (sale - actual) * (1 - Math.exp(-18 * dt))
-      m.position.copy(casa).addScaledVector(normal, siguiente)
+      m.position.copy(pos).addScaledVector(normal, siguiente)
+    } else {
+      m.position.copy(pos)
+      if (apuntado && d.tipo === 'mesa') m.position.y += 0.012
     }
   })
 

@@ -4,7 +4,12 @@ import type { Criterio, Hueco, Libro, Seccion } from '../tipos'
 
 export interface Contexto {
   biblioteca: Biblioteca
+  pendientes: Libro[]
+  carro: Libro[]
   ultimaBusqueda: Libro[]
+  candidatos: Libro[]
+  anadir: (libro: Libro) => void
+  colocarTodo: () => void
   ordenar: (seccion: string, criterio: Criterio) => void
   ampliar: (seccion: string) => void
   guiar: (id: string) => void
@@ -14,7 +19,39 @@ export interface Contexto {
 export interface Respuesta {
   lineas: string[]
   busqueda?: Libro[]
+  candidatos?: Libro[]
   limpiar?: boolean
+  despues?: Promise<Respuesta>
+}
+
+const GENEROS: [RegExp, string][] = [
+  [/fantasy|fantas/i, 'fantasía'],
+  [/science fiction|ciencia ficci|sci-fi|dystopi/i, 'ciencia ficción'],
+  [/history|essays|philosophy|biograph|nonfiction|non-fiction|ensayo|science|psycholog|politic/i, 'ensayo'],
+  [/classic|clásic/i, 'clásicos'],
+]
+
+function generoDe(temas: string[] = []) {
+  const texto = temas.slice(0, 40).join(' | ')
+  return GENEROS.find(([re]) => re.test(texto))?.[1] ?? 'novela'
+}
+
+async function buscarEnOpenLibrary(texto: string): Promise<Libro[]> {
+  const campos = 'key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject'
+  const r = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(texto)}&lang=es&fields=${campos}&limit=6`)
+  if (!r.ok) throw new Error(String(r.status))
+  const { docs = [] } = await r.json()
+  return docs.map((d: { key: string; title: string; author_name?: string[]; first_publish_year?: number; number_of_pages_median?: number; cover_i?: number; subject?: string[] }) => ({
+    id: 'ol_' + d.key.split('/').pop(),
+    tipo: 'libro' as const,
+    titulo: d.title,
+    autor: d.author_name?.[0] ?? 'autor desconocido',
+    anio: d.first_publish_year ?? null,
+    paginas: d.number_of_pages_median ?? null,
+    portada: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : null,
+    genero: generoDe(d.subject),
+    alta: new Date().toLocaleDateString('sv-SE'),
+  }))
 }
 
 const normal = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
@@ -30,7 +67,10 @@ export const AYUDA = [
   '                       <EST> PUEDE SER TODAS',
   '  AMPLIAR <EST>        AÑADE UN MUEBLE A UNA ESTANTERIA',
   '  ESTADISTICAS         CIFRAS DE TU COLECCION',
-  '  PENDIENTES           LO QUE ESPERA EN LA ENTRADA',
+  '  PENDIENTES           LO QUE ESPERA EN LA ENTRADA Y EN EL CARRO',
+  '  AÑADIR <TITULO>      BUSCA UN LIBRO EN OPEN LIBRARY',
+  '  ELEGIR <N>           LO DEJA EN LA MESA DE LA ENTRADA',
+  '  COLOCAR TODO         COLOCA SOLO LO PENDIENTE Y EL CARRO',
   '  CREDITOS  LIMPIAR  SALIR',
 ]
 
@@ -139,8 +179,47 @@ export function ejecutar(linea: string, ctx: Contexto): Respuesta {
         ],
       }
     }
-    case 'pendientes':
-      return { lineas: ['NADA POR ORDENAR EN LA ENTRADA.', '(LA ENTRADA Y EL CARRO LLEGAN EN LA FASE 3.)'] }
+    case 'pendientes': {
+      if (!ctx.pendientes.length && !ctx.carro.length) return { lineas: ['TODO ESTA EN SU SITIO.'] }
+      return {
+        lineas: [
+          `EN LA MESA (${ctx.pendientes.length}):`,
+          ...ctx.pendientes.map(l => `  - ${l.titulo.toUpperCase()}`),
+          `EN EL CARRO (${ctx.carro.length}):`,
+          ...ctx.carro.map(l => `  - ${l.titulo.toUpperCase()}`),
+        ],
+      }
+    }
+    case 'anadir': case 'añadir': {
+      if (!arg) return { lineas: ['USO: AÑADIR <TITULO O AUTOR>'] }
+      return {
+        lineas: [`BUSCANDO "${arg.toUpperCase()}" EN OPEN LIBRARY...`],
+        despues: buscarEnOpenLibrary(arg).then(r => r.length
+          ? {
+              lineas: [
+                ...r.map((l, i) => `  ${i + 1}. ${l.titulo.toUpperCase()} (${l.autor.toUpperCase()}${l.anio ? ', ' + l.anio : ''})  [${l.genero!.toUpperCase()}]`),
+                'ESCRIBE ELEGIR <N> PARA DEJARLO EN LA MESA DE LA ENTRADA.',
+              ],
+              candidatos: r,
+            }
+          : { lineas: ['NO HE ENCONTRADO NADA. PRUEBA CON OTRAS PALABRAS.'] })
+          .catch(() => ({ lineas: ['SIN CONEXION CON OPEN LIBRARY. PRUEBA MAS TARDE.'] })),
+      }
+    }
+    case 'elegir': {
+      const libro = ctx.candidatos[Number(arg) - 1]
+      if (!libro) return { lineas: ['PRIMERO AÑADIR <TITULO> Y LUEGO ELEGIR <N>.'] }
+      const ya = ctx.biblioteca.huecos.some(h => h.libro.id === libro.id) || ctx.pendientes.some(l => l.id === libro.id)
+      if (ya) return { lineas: ['ESE LIBRO YA ESTA EN TU BIBLIOTECA.'] }
+      ctx.anadir(libro)
+      return { lineas: [`${libro.titulo.toUpperCase()} TE ESPERA EN LA MESA DE LA ENTRADA.`] }
+    }
+    case 'colocar': {
+      const n = ctx.pendientes.length + ctx.carro.length
+      if (!n) return { lineas: ['NO HAY NADA POR COLOCAR.'] }
+      ctx.colocarTodo()
+      return { lineas: [`COLOCANDO ${n} ${n === 1 ? 'LIBRO' : 'LIBROS'} EN SU SITIO... HECHO.`] }
+    }
     case 'creditos':
       return { lineas: ['BIBLIOTEC SE APOYA EN:', '  THREE.JS, REACT THREE FIBER, DREI (MIT)', '  OPEN LIBRARY (PORTADAS Y DATOS)', '  POPPINS Y VT323 (OFL)', 'LISTA COMPLETA EN CREDITOS.MD'] }
     case 'limpiar': case 'cls': case 'clear':

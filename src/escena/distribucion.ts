@@ -5,7 +5,7 @@ import type { Caja, Hueco, Libro, Mueble, Seccion } from '../tipos'
 export const SALA = { ancho: 12, fondo: 10, alto: 3.2 }
 export const MUEBLE = { ancho: 1, alto: 2.1, fondo: 0.34, baldas: 5, tabla: 0.025 }
 export const ISLA_Z = -2
-const PROFUNDIDAD_LIBRO = 0.15
+export const PROFUNDIDAD_LIBRO = 0.15
 const HOLGURA = 0.004
 const UTIL = MUEBLE.ancho - 2 * MUEBLE.tabla - 0.02
 const LLENADO = 0.85
@@ -87,12 +87,15 @@ export function construir(libros: Libro[], config: Config, colorDe: (l: Libro) =
   const lista_secciones = secciones(libros, config)
 
   for (const s of lista_secciones) {
-    const propios = lista.slice(cursor, cursor + s.modulos).map((sitio, indice) => ({ ...sitio, id: `${s.id}-${indice}`, seccion: s.id, indice }))
-    cursor += propios.length
-    muebles.push(...propios)
     const cola = ordenar(s.libros, s.criterio, colorDe)
     let i = 0
-    for (const m of propios) {
+    let indice = 0
+    // Si el cálculo de muebles se queda corto, la estantería toma otro sitio
+    // libre antes que dejar libros fuera.
+    while (cursor < lista.length && (indice < s.modulos || i < cola.length)) {
+      const m: Mueble = { ...lista[cursor++], id: `${s.id}-${indice}`, seccion: s.id, indice }
+      indice++
+      muebles.push(m)
       const cos = Math.cos(m.giro), sin = Math.sin(m.giro)
       for (const balda of ORDEN_BALDAS) {
         if (i >= cola.length) break
@@ -119,6 +122,7 @@ export function construir(libros: Libro[], config: Config, colorDe: (l: Libro) =
         }
       }
     }
+    s.modulos = indice
     if (i < cola.length) sobran[s.id] = cola.slice(i)
   }
   return { secciones: lista_secciones, muebles, huecos, sobran, libres: lista.length - cursor }

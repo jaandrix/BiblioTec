@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { cambiarEstado, useEstado } from '../estado'
+import { useEffect, useRef, useState } from 'react'
+import { cambiarEstado, hechosHoy, useEstado } from '../estado'
 import { entrar, giroInspeccion, huecoDe } from '../escena/registro'
 import type { Libro } from '../tipos'
 import { MenuOrden } from './MenuOrden'
@@ -31,6 +31,32 @@ function Ficha({ libro }: { libro: Libro }) {
       <p className="pista">arrastra para girarlo. esc o clic fuera para devolverlo.</p>
     </aside>
   )
+}
+
+function Marcador({ pendientes, carro }: { pendientes: number; carro: number }) {
+  const hoy = useEstado(() => hechosHoy())
+  if (!pendientes && !carro && !hoy) return null
+  return (
+    <div className="marcador">
+      <div><span>por ordenar.</span><strong>{pendientes}</strong></div>
+      <div><span>en el carro.</span><strong>{carro}</strong></div>
+      <div><span>hoy.</span><strong>{hoy}</strong></div>
+      {carro > 0 && <p>sigue las flechas hasta el hueco que brilla. <kbd>g</kbd> las apaga.</p>}
+    </div>
+  )
+}
+
+function Aviso() {
+  const aviso = useEstado(e => e.aviso)
+  const [visible, setVisible] = useState<typeof aviso>(null)
+  useEffect(() => {
+    if (!aviso) return
+    setVisible(aviso)
+    const t = setTimeout(() => setVisible(v => (v === aviso ? null : v)), 2200)
+    return () => clearTimeout(t)
+  }, [aviso])
+  if (!visible) return null
+  return <div className="aviso" key={visible.n}>{visible.texto}</div>
 }
 
 export function Interfaz({ libros }: { libros: Libro[] }) {
@@ -76,14 +102,21 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
     }
   }, [abierto])
 
-  const pista = !apuntado ? null : apuntado === 'terminal'
-    ? <><kbd>clic</kbd> usar el ordenador</>
+  const pendientes = useEstado(e => e.coleccion.pendientes)
+  const carro = useEstado(e => e.coleccion.carro)
+  const pista = !apuntado ? null
+    : apuntado === 'terminal' ? <><kbd>clic</kbd> usar el ordenador</>
+    : apuntado.startsWith('hueco:') ? <><kbd>clic</kbd> colocar aquí</>
+    : pendientes.includes(apuntado) ? <><kbd>clic</kbd> al carro <kbd>t</kbd> todos al carro</>
+    : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado.</>
     : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
 
   return (
     <>
       {dentro && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
       {dentro && pista && <div className="pista-mirilla">{pista}</div>}
+      {dentro && <Marcador pendientes={pendientes.length} carro={carro.length} />}
+      <Aviso />
       {libro && <Ficha libro={libro} />}
       {terminal && <Terminal />}
       {menuOrden && <MenuOrden seccion={menuOrden} />}
@@ -95,7 +128,8 @@ export function Interfaz({ libros }: { libros: Libro[] }) {
             <ul>
               <li><kbd>w a s d</kbd> moverse, <kbd>mayús</kbd> correr</li>
               <li><kbd>ratón</kbd> mirar</li>
-              <li><kbd>clic</kbd> sacar un libro, usar el ordenador</li>
+              <li><kbd>clic</kbd> sacar un libro, usar el ordenador, coger de la mesa, colocar</li>
+              <li><kbd>t</kbd> todo lo de la mesa al carro, <kbd>g</kbd> flechas del suelo</li>
               <li><kbd>o</kbd> ordenar la estantería que miras</li>
               <li><kbd>esc</kbd> salir</li>
             </ul>

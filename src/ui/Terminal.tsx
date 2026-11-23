@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { cambiarCriterio, cambiarEstado, sumarModulo } from '../estado'
+import { anadirPendiente, cambiarCriterio, cambiarEstado, colocar, leerEstado, sumarModulo } from '../estado'
 import { control, entrar } from '../escena/registro'
 import { ejecutar } from '../terminal/comandos'
 import type { Libro } from '../tipos'
+import { sonar } from '../sonido'
 
-const ATAJOS = ['ayuda', 'buscar ', 'estanterias', 'estadisticas', 'ordenar todas por ', 'salir']
+const ATAJOS = ['ayuda', 'buscar ', 'añadir ', 'pendientes', 'colocar todo', 'estanterias', 'estadisticas', 'salir']
 
 function arranque() {
   const b = control.biblioteca
   return [
-    'BIBLIOTEC OS v0.2   (C) 1984-2026',
+    'BIBLIOTEC OS v0.3   (C) 1984-2026',
     'MEMORIA ......... 640K OK',
     `CATALOGO ........ ${b?.huecos.length ?? 0} LIBROS EN ${b?.secciones.length ?? 0} ESTANTERIAS`,
     '',
@@ -23,6 +24,7 @@ export function Terminal() {
   const historial = useRef<string[]>([])
   const posHistorial = useRef(-1)
   const busqueda = useRef<Libro[]>([])
+  const candidatos = useRef<Libro[]>([])
   const campo = useRef<HTMLInputElement>(null)
   const fondo = useRef<HTMLDivElement>(null)
 
@@ -40,9 +42,18 @@ export function Terminal() {
     if (texto.trim()) historial.current.unshift(texto)
     posHistorial.current = -1
     let saliendo = false
+    const b = control.biblioteca!
+    const { coleccion } = leerEstado()
+    const porId = (id: string) => control.todos.find(l => l.id === id)
+    const deIds = (ids: string[]) => ids.map(porId).filter((l): l is Libro => !!l)
     const r = ejecutar(texto, {
-      biblioteca: control.biblioteca!,
+      biblioteca: b,
+      pendientes: deIds(coleccion.pendientes),
+      carro: deIds(coleccion.carro),
       ultimaBusqueda: busqueda.current,
+      candidatos: candidatos.current,
+      anadir: anadirPendiente,
+      colocarTodo: () => { colocar([...coleccion.pendientes, ...coleccion.carro]); sonar.colocar() },
       ordenar: cambiarCriterio,
       ampliar: sumarModulo,
       guiar: id => { cambiarEstado({ guia: id }); saliendo = true },
@@ -50,6 +61,10 @@ export function Terminal() {
     })
     if (r.busqueda) busqueda.current = r.busqueda
     setLineas(l => (r.limpiar ? [] : [...l, `> ${texto}`, ...r.lineas]).slice(-200))
+    r.despues?.then(d => {
+      if (d.candidatos) candidatos.current = d.candidatos
+      setLineas(l => [...l, ...d.lineas].slice(-200))
+    })
     // Pedir el ratón desde la tecla Intro cuenta como gesto del usuario.
     if (saliendo) setTimeout(() => salir(), 700)
   }

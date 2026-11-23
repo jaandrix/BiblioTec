@@ -24,7 +24,7 @@ function texturaPantalla(libros: number, estanterias: number) {
   ctx.shadowColor = '#39ff6a'
   ctx.shadowBlur = 8
   ctx.font = '30px VT323, monospace'
-  const lineas = ['BIBLIOTEC OS v0.2', '', `LIBROS ........ ${libros}`, `ESTANTERIAS ... ${estanterias}`, '', '> HAZ CLIC PARA USAR_']
+  const lineas = ['BIBLIOTEC OS v0.3', '', `LIBROS ........ ${libros}`, `ESTANTERIAS ... ${estanterias}`, '', '> HAZ CLIC PARA USAR_']
   lineas.forEach((l, i) => ctx.fillText(l, 34, 64 + i * 46))
   for (let y = 0; y < 384; y += 4) {
     ctx.fillStyle = 'rgba(0,0,0,0.25)'
