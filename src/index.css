@@ -212,3 +212,31 @@ kbd {
 .lista-cajas small { color: var(--tinta-suave); }
 .nueva-caja { display: flex; gap: 8px; }
 .nueva-caja input { flex: 1; font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 1px solid #4a3b2f; background: #1a1410; color: var(--tinta); }
+
+.portada { cursor: default; }
+.portada-doble { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr); gap: 36px; max-width: 820px; }
+.portada-doble p { color: var(--tinta-suave) !important; margin: 6px 0 18px !important; font-size: 14px; line-height: 1.5; }
+.acceso { display: grid; gap: 10px; }
+.acceso .pestanas { margin-bottom: 4px; }
+.acceso input, .codigo-bitacora input {
+  font: inherit; font-size: 14px; padding: 10px 12px; border-radius: 10px; border: 1px solid #4a3b2f; background: #1a1410; color: var(--tinta);
+}
+.acceso button, .portada .enlace, .boton-entrar {
+  font: inherit; font-size: 14px; border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer; background: #3a2e25; color: var(--tinta);
+}
+.acceso button.activa { background: #5a4636; outline: 2px solid var(--acento); }
+.acceso button.principal, .boton-entrar { background: var(--acento); color: #241c16; font-weight: 600; padding: 11px; }
+.boton-entrar { width: 100%; }
+.portada .enlace { background: transparent; color: var(--tinta-suave); text-decoration: underline; padding: 6px 0; margin-top: 8px; }
+.acceso .mensaje { margin: 0 !important; color: var(--acento) !important; }
+.codigo-bitacora { gap: 10px; }
+.codigo-bitacora input { flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 12px; }
+.nota-ajuste { margin: -6px 0 0; font-size: 12px; color: var(--tinta-suave); line-height: 1.5; }
+.revision p { line-height: 1.5; }
+.quitar-ejemplos { margin: 12px 0 0; }
+.lista-revision { display: grid; gap: 8px; margin: 16px 0; max-height: 380px; overflow-y: auto; }
+.item-revision { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #2d241d; border-radius: 10px; padding: 10px 12px; }
+.item-revision b { display: block; font-weight: 500; }
+.item-revision small { color: var(--tinta-suave); font-size: 12px; }
+.item-revision .botones { display: flex; gap: 6px; flex-shrink: 0; }
+.item-revision button.si { background: var(--acento); color: #241c16; font-weight: 600; }

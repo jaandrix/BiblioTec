@@ -52,7 +52,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     control.camara = camera as PerspectiveCamera
     if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros, pasar: (n = 30) => { for (let i = 0; i < n; i++) advance(performance.now() + i * 16) } } })
 
-    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null })
+    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null, verRevision: false })
     const alSalir = () => {
       if (soltadoPropio.activo) {
         soltadoPropio.activo = false
@@ -104,6 +104,11 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
         avisar(leerEstado().config.guiaSuelo ? 'flechas del suelo encendidas.' : 'flechas del suelo apagadas.')
       }
       if (e.code === 'KeyC') alternarCarro()
+      if (e.code === 'KeyN') {
+        if (!leerEstado().revision.length) { avisar('nada nuevo de bitácora.'); return }
+        cambiarEstado({ verRevision: true })
+        soltar()
+      }
       if (e.code === 'KeyT' && apuntado && coleccion.pendientes.includes(apuntado)) cogerAlCarro(coleccion.pendientes)
       if (e.code === 'KeyO' && apuntado?.startsWith('carta_')) {
         cambiarEstado({ menuOrden: 'pokemon', apuntado: null })
@@ -181,7 +186,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   }, [camera, gl])
 
   useFrame((_, dt) => {
-    const { dentro, abierto, terminal, menuOrden, config, llevoCarro, cajaAbierta, guardarEnCaja } = leerEstado()
+    const { dentro, abierto, terminal, menuOrden, config, llevoCarro, cajaAbierta, guardarEnCaja, verRevision } = leerEstado()
     const mando = control.mando
     const cam = camera as PerspectiveCamera
     if (mando) {
@@ -196,7 +201,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       cam.updateProjectionMatrix()
     }
 
-    if (!dentro || abierto || terminal || menuOrden || cajaAbierta || guardarEnCaja) return
+    if (!dentro || abierto || terminal || menuOrden || cajaAbierta || guardarEnCaja || verRevision) return
     const t = teclas.current
     const avance = (t.has('KeyW') || t.has('ArrowUp') ? 1 : 0) - (t.has('KeyS') || t.has('ArrowDown') ? 1 : 0)
     const giro = (t.has('KeyD') || t.has('ArrowRight') ? 1 : 0) - (t.has('KeyA') || t.has('ArrowLeft') ? 1 : 0)

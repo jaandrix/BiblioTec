@@ -18,8 +18,17 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 3 | Mesa de entrada, carro, huecos que brillan, añadir libros por título | hecha |
 | 3.5 | Pulido: inspección nueva, pausa y ajustes, zoom, dejar el carro, brazos, cambiar portadas, mejor aspecto | hecha |
 | 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado, vitrina de graduadas | hecha (con cartas de ejemplo) |
-| 5 | Cuentas, enlace con Bitácora, guardar en la nube | siguiente |
-| 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | pendiente |
+| 5 | Cuentas, enlace con Bitácora, guardar en la nube | hecha |
+| 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | siguiente |
+
+## Cuenta y Bitácora
+
+1. **Crear cuenta:** en la pantalla de inicio, «crear cuenta.» con tu correo y una contraseña (8 caracteres o más). Te llega un correo para confirmarla; después entras con «entrar.». Sin cuenta puedes jugar igual, pero solo se guarda en ese navegador.
+2. **Conectar Bitácora:** en Bitácora, Ajustes, conexiones, «bibliotec.», pulsa «conectar.» y copia el código. En BiblioTec, pausa (`esc`), «cuenta y bitácora.», pega el código y «conectar.» (o en el ordenador: `bitacora <código>`).
+3. **Revisar lo que llega:** pulsa `n`. Para cada libro o carta dices si lo tienes en físico: los libros van a la mesa de la entrada para ordenarlos con el carro; las cartas, al expositor (las graduadas, a la vitrina); el sellado, a su estantería. Lo que no tienes queda apuntado para el archivo. Las cartas sin set y número en Bitácora salen como «sin identificar»: elige la carta exacta en Bitácora y volverán a aparecer.
+4. **Quitar los ejemplos:** en la misma pestaña, o en la revisión, «quitar los libros y cartas de ejemplo.».
+
+Todo lo que hagas se guarda en la nube y aparece igual en cualquier ordenador donde entres con tu cuenta. Bitácora se consulta sola cada vez que entras.
 
 ## Cómo se juega
 
@@ -52,12 +61,13 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 
 ## Lo que falta de lo que decidiste
 
-- **Tus libros reales de Bitácora:** fase 5, con cuentas y código de conexión. Ahora mismo en Bitácora tienes un solo libro.
 - **Mover libros a mano, fijarlos y colocarlos fuera de orden** (preguntas 89 a 91): más adelante.
 - **Ubicaciones de casa** editables desde el ordenador: más adelante. Ahora la ficha dice "sin ubicación".
 - **Menú con flechas en el ordenador:** de momento hay botones con los comandos.
-- **Tus cartas reales:** en Bitácora casi ninguna tiene set y número; con el enlace (fase 5) entrarán y las que no se reconozcan esperarán en la entrada para completarlas. El repositorio es público, así que no subo tu colección al código.
-- **Cartas por la entrada y el carro:** de momento las cartas nuevas no pasan por la mesa; se hará junto al enlace con Bitácora.
+- **Tus cartas reales:** en Bitácora casi ninguna tiene elegida la carta exacta (set y número). Hasta que lo hagas en Bitácora, en la revisión salen como «sin identificar». Los productos sellados sí entran ya.
+- **Cartas por la entrada y el carro:** las cartas que llegan de Bitácora van directas al expositor, sin pasar por la mesa.
+- **Entrar con Google:** necesita configurar Google Cloud; de momento solo correo y contraseña.
+- **Películas, series y videojuegos de Bitácora:** se importarán cuando tengan estanterías (fase 6).
 - **Medidas reales del producto sellado:** las de ahora son aproximadas; se afinarán con los datos de DeepSeek.
 - **Películas, series, videojuegos, consolas, Spotify y modelos 3D más bonitos** (Kenney, Poly Pizza): fases 5 y 6.
 - **Encargos externos:** los resultados de DeepSeek (medidas reales, productos Pokémon, textos del terminal) y la prueba de OpenCode aún no han llegado. La fase 4 aprovechará los datos de DeepSeek si los tienes.

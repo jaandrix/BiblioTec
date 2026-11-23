@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { CajaCartas, Criterio, CriterioCartas, Libro } from './tipos'
+import type { CajaCartas, Carta, Criterio, CriterioCartas, Libro, Sellado } from './tipos'
 import pokemonDemo from './datos/pokemon-demo.json'
 
 export interface Config {
@@ -9,6 +9,7 @@ export interface Config {
   sensibilidad: number
   calidad: 'alta' | 'baja'
   sonido: boolean
+  ejemplos: boolean
 }
 
 export interface Coleccion {
@@ -23,6 +24,24 @@ export interface Pokemon {
   expositor: string[]
   cajas: CajaCartas[]
   criterio: CriterioCartas
+  cartas: Carta[]
+  sellados: Sellado[]
+}
+
+export interface Enlace {
+  codigo: string | null
+  vistos: string[]
+  archivo: string[]
+  ultima: string | null
+}
+
+export interface ItemBitacora {
+  id: string
+  clase: 'libro' | 'carta' | 'sellado' | 'incompleta'
+  titulo: string
+  detalle: string
+  imagen: string | null
+  datos: Record<string, unknown>
 }
 
 export const CAPACIDAD_CAJA = 25
@@ -41,6 +60,10 @@ interface Estado {
   cajaAbierta: string | null
   guardarEnCaja: string | null
   pokemon: Pokemon
+  enlace: Enlace
+  revision: ItemBitacora[]
+  verRevision: boolean
+  cuenta: { email: string } | null
   aviso: { texto: string; n: number } | null
   config: Config
   coleccion: Coleccion
@@ -50,6 +73,7 @@ export const MAX_CARRO = 20
 const CLAVE_CONFIG = 'bibliotec-config-v1'
 const CLAVE_COLECCION = 'bibliotec-coleccion-v1'
 const CLAVE_POKEMON = 'bibliotec-pokemon-v1'
+const CLAVE_ENLACE = 'bibliotec-enlace-v1'
 
 // Ejemplo: las graduadas van a la vitrina, unas comunes a una caja y el resto al expositor.
 function pokemonInicial(): Pokemon {
@@ -59,6 +83,8 @@ function pokemonInicial(): Pokemon {
     expositor: sueltas.map(c => c.id).filter(id => !comunes.includes(id)),
     cajas: [{ id: 'caja_1', nombre: 'kanto', cartas: comunes }, { id: 'caja_2', nombre: 'repetidas', cartas: [] }],
     criterio: 'set',
+    cartas: [],
+    sellados: [],
   }
 }
 // Mientras no hay enlace con Bitácora, estos libros de ejemplo esperan en la
@@ -95,8 +121,12 @@ let estado: Estado = {
   cajaAbierta: null,
   guardarEnCaja: null,
   pokemon: leer<Pokemon>(CLAVE_POKEMON, pokemonInicial()),
+  enlace: leer<Enlace>(CLAVE_ENLACE, { codigo: null, vistos: [], archivo: [], ultima: null }),
+  revision: [],
+  verRevision: false,
+  cuenta: null,
   aviso: null,
-  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'alta', sonido: true }),
+  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'alta', sonido: true, ejemplos: true }),
   coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {} }),
 }
 const oyentes = new Set<() => void>()
@@ -107,12 +137,44 @@ export function cambiarEstado(parcial: Partial<Estado>) {
   if (siguiente.config !== estado.config) guardar(CLAVE_CONFIG, siguiente.config)
   if (siguiente.coleccion !== estado.coleccion) guardar(CLAVE_COLECCION, siguiente.coleccion)
   if (siguiente.pokemon !== estado.pokemon) guardar(CLAVE_POKEMON, siguiente.pokemon)
+  if (siguiente.enlace !== estado.enlace) guardar(CLAVE_ENLACE, siguiente.enlace)
   estado = siguiente
   oyentes.forEach(o => o())
 }
 
 export function leerEstado() {
   return estado
+}
+
+export function suscribir(fn: () => void) {
+  oyentes.add(fn)
+  return () => { oyentes.delete(fn) }
+}
+
+// Lo que se guarda en la nube: todo lo que el usuario ha decidido, nada de lo
+// que solo dura mientras juega.
+export function datosGuardables() {
+  return { config: estado.config, coleccion: estado.coleccion, pokemon: estado.pokemon, enlace: estado.enlace }
+}
+
+export function aplicarDatos(d: Partial<ReturnType<typeof datosGuardables>>) {
+  cambiarEstado({
+    ...(d.config ? { config: { ...estado.config, ...d.config } } : {}),
+    ...(d.coleccion ? { coleccion: { ...estado.coleccion, ...d.coleccion } } : {}),
+    ...(d.pokemon ? { pokemon: { ...estado.pokemon, ...d.pokemon } } : {}),
+    ...(d.enlace ? { enlace: { ...estado.enlace, ...d.enlace } } : {}),
+  })
+}
+
+export function quitarEjemplos() {
+  const esEjemplo = (id: string) => id.startsWith('demo_')
+  const p = estado.pokemon
+  const propias = new Set(p.cartas.map(c => c.id))
+  cambiarEstado({
+    config: { ...estado.config, ejemplos: false },
+    coleccion: { ...estado.coleccion, pendientes: estado.coleccion.pendientes.filter(id => !esEjemplo(id)), carro: estado.coleccion.carro.filter(id => !esEjemplo(id)) },
+    pokemon: { ...p, expositor: p.expositor.filter(id => propias.has(id)), cajas: p.cajas.map(c => ({ ...c, cartas: c.cartas.filter(id => propias.has(id)) })) },
+  })
 }
 
 export function cambiarCriterio(seccion: string, criterio: Criterio) {
@@ -199,6 +261,21 @@ export function renombrarCaja(id: string, nombre: string) {
 
 export function cambiarCriterioCartas(criterio: CriterioCartas) {
   cambiarPokemon(() => ({ criterio }))
+}
+
+export function cambiarEnlace(parcial: Partial<Enlace>) {
+  cambiarEstado({ enlace: { ...estado.enlace, ...parcial } })
+}
+
+export function anadirCarta(carta: Carta) {
+  cambiarPokemon(p => ({
+    cartas: [...p.cartas.filter(c => c.id !== carta.id), carta],
+    expositor: carta.graduada || p.expositor.includes(carta.id) ? p.expositor : [...p.expositor, carta.id],
+  }))
+}
+
+export function anadirSellado(s: Sellado) {
+  cambiarPokemon(p => ({ sellados: [...p.sellados.filter(x => x.id !== s.id), s] }))
 }
 
 let numAviso = 0

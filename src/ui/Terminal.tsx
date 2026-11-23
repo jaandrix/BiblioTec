@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { anadirPendiente, cambiarCriterio, cambiarEstado, colocar, crearCaja, leerEstado, sumarModulo } from '../estado'
-import pokemonDemo from '../datos/pokemon-demo.json'
 import { precioCarta } from './Pokemon'
 import { control, entrar } from '../escena/registro'
 import { ejecutar } from '../terminal/comandos'
-import type { Carta, Libro } from '../tipos'
+import type { Libro } from '../tipos'
+import { traerDeBitacora } from '../sincronizar'
+import { cambiarEnlace } from '../estado'
 import { sonar } from '../sonido'
 
-const ATAJOS = ['ayuda', 'buscar ', 'añadir ', 'pendientes', 'colocar todo', 'cartas', 'valor', 'cajas', 'salir']
+const ATAJOS = ['ayuda', 'buscar ', 'añadir ', 'pendientes', 'colocar todo', 'bitacora', 'cartas', 'valor', 'salir']
 
 function arranque() {
   const b = control.biblioteca
@@ -55,7 +56,8 @@ export function Terminal() {
       ultimaBusqueda: busqueda.current,
       candidatos: candidatos.current,
       anadir: anadirPendiente,
-      cartas: pokemonDemo.cartas as Carta[],
+      cartas: control.cartas,
+      bitacora: (codigo?: string) => { if (codigo) cambiarEnlace({ codigo }); return traerDeBitacora() },
       cajas: leerEstado().pokemon.cajas,
       crearCaja: n => { crearCaja(n) },
       precio: precioCarta,

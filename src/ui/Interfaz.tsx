@@ -3,6 +3,7 @@ import { alternarGuiaSuelo, cambiarAjuste, cambiarEstado, hechosHoy, useEstado }
 import { entrar, huecoDe } from '../escena/registro'
 import type { Carta, Libro, Sellado } from '../tipos'
 import { CajaAbierta, ElegirCaja, FichaCarta, FichaSellado, MenuOrdenCartas } from './Pokemon'
+import { Acceso, AjustesCuenta, Revision } from './Cuenta'
 import { EditorPortada } from './EditorPortada'
 import { MenuOrden } from './MenuOrden'
 import { Terminal } from './Terminal'
@@ -45,8 +46,10 @@ function Marcador() {
   const carro = useEstado(e => e.coleccion.carro.length)
   const llevo = useEstado(e => e.llevoCarro)
   const hoy = useEstado(() => hechosHoy())
-  if (!pendientes && !carro && !hoy && llevo) return null
-  const paso = !llevo ? 'el carro está aparcado. acércate y pulsa c para cogerlo.'
+  const revision = useEstado(e => e.revision.length)
+  if (!pendientes && !carro && !hoy && llevo && !revision) return null
+  const paso = revision ? `${revision} ${revision === 1 ? 'cosa nueva' : 'cosas nuevas'} de bitácora. pulsa n para revisarlas.`
+    : !llevo ? 'el carro está aparcado. acércate y pulsa c para cogerlo.'
     : carro ? 'sigue las flechas del suelo. donde va cada libro brilla un hueco con una flecha encima: apúntalo y haz clic.'
     : pendientes ? 'en la mesa de la entrada esperan libros. apunta a uno y haz clic para cogerlo (t coge todos).'
     : null
@@ -82,6 +85,7 @@ const CONTROLES: [string, string][] = [
   ['c', 'dejar o coger el carro'],
   ['o', 'ordenar la estantería que miras'],
   ['g', 'flechas del suelo'],
+  ['n', 'revisar lo nuevo de bitácora'],
   ['esc', 'pausa'],
 ]
 
@@ -94,11 +98,25 @@ function Controles() {
 }
 
 function Portada() {
+  const cuenta = useEstado(e => e.cuenta)
   return (
-    <div className="portada" onClick={entrar}>
-      <div className="caja">
-        <h1>bibliotec.</h1>
-        <p>haz clic para entrar.</p>
+    <div className="portada">
+      <div className="caja portada-doble">
+        <div>
+          <h1>bibliotec.</h1>
+          {cuenta ? (
+            <>
+              <p>hola, {cuenta.email}. tu biblioteca está guardada en la nube.</p>
+              <button className="boton-entrar" onClick={entrar}>entrar.</button>
+            </>
+          ) : (
+            <>
+              <p>entra con tu cuenta para guardar tu biblioteca y conectar bitácora.</p>
+              <Acceso />
+              <button className="enlace" onClick={entrar}>probar sin cuenta.</button>
+            </>
+          )}
+        </div>
         <Controles />
       </div>
     </div>
@@ -107,7 +125,7 @@ function Portada() {
 
 function Pausa() {
   const config = useEstado(e => e.config)
-  const [pestana, setPestana] = useState<'controles' | 'ajustes'>('controles')
+  const [pestana, setPestana] = useState<'controles' | 'ajustes' | 'cuenta'>('controles')
   const seguir = () => { cambiarEstado({ pausa: false }); entrar() }
 
   useEffect(() => {
@@ -123,8 +141,9 @@ function Pausa() {
         <div className="pestanas">
           <button className={pestana === 'controles' ? 'activa' : ''} onClick={() => setPestana('controles')}>controles.</button>
           <button className={pestana === 'ajustes' ? 'activa' : ''} onClick={() => setPestana('ajustes')}>ajustes.</button>
+          <button className={pestana === 'cuenta' ? 'activa' : ''} onClick={() => setPestana('cuenta')}>cuenta y bitácora.</button>
         </div>
-        {pestana === 'controles' ? <Controles /> : (
+        {pestana === 'controles' ? <Controles /> : pestana === 'cuenta' ? <AjustesCuenta /> : (
           <div className="ajustes">
             <label>
               <span>sensibilidad del ratón.</span>
@@ -167,6 +186,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
   const pendientes = useEstado(e => e.coleccion.pendientes)
   const carro = useEstado(e => e.coleccion.carro)
   const cajaAbierta = useEstado(e => e.cajaAbierta)
+  const verRevision = useEstado(e => e.verRevision)
   const guardarEnCaja = useEstado(e => e.guardarEnCaja)
   const libro = abierto ? libros.find(l => l.id === abierto) : null
   const carta = abierto ? cartas.find(c => c.id === abierto) : null
@@ -194,7 +214,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
     : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado.</>
     : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
 
-  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar
+  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar && !verRevision
   return (
     <>
       {dentro && !mirando && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
@@ -210,6 +230,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
       {menuOrden === 'pokemon' && <MenuOrdenCartas />}
       {menuOrden && menuOrden !== 'pokemon' && <MenuOrden seccion={menuOrden} />}
       {libroEditar && <EditorPortada libro={libroEditar} />}
+      {verRevision && <Revision />}
       {pausa && <Pausa />}
       {sinNada && inicio && <Portada />}
       {sinNada && !inicio && <div className="seguir" onClick={entrar}>haz clic para seguir.</div>}

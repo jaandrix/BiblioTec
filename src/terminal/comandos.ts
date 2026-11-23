@@ -14,6 +14,7 @@ export interface Contexto {
   cajas: CajaCartas[]
   crearCaja: (nombre: string) => void
   precio: (tcgdex: string) => Promise<number | null>
+  bitacora: (codigo?: string) => Promise<void>
   ordenar: (seccion: string, criterio: Criterio) => void
   ampliar: (seccion: string) => void
   guiar: (id: string) => void
@@ -75,6 +76,7 @@ export const AYUDA = [
   '  AÑADIR <TITULO>      BUSCA UN LIBRO EN OPEN LIBRARY',
   '  ELEGIR <N>           LO DEJA EN LA MESA DE LA ENTRADA',
   '  COLOCAR TODO         COLOCA SOLO LO PENDIENTE Y EL CARRO',
+  '  BITACORA [CODIGO]    CONECTA O TRAE LO NUEVO DE BITACORA',
   '  CARTAS               RESUMEN DE TU COLECCION POKEMON',
   '  CAJAS                CAJAS DE CARTAS Y SU OCUPACION',
   '  CAJA NUEVA <NOMBRE>  CREA UNA CAJA NEGRA (25 CARTAS)',
@@ -227,6 +229,14 @@ export function ejecutar(linea: string, ctx: Contexto): Respuesta {
       if (!n) return { lineas: ['NO HAY NADA POR COLOCAR.'] }
       ctx.colocarTodo()
       return { lineas: [`COLOCANDO ${n} ${n === 1 ? 'LIBRO' : 'LIBROS'} EN SU SITIO... HECHO.`] }
+    }
+    case 'bitacora': {
+      const codigo = arg.trim()
+      if (codigo && !/^[a-f0-9]{48,128}$/i.test(codigo)) return { lineas: ['ESE CODIGO NO PARECE BUENO. COPIALO DE BITACORA: AJUSTES, CONEXIONES, BIBLIOTEC.'] }
+      return {
+        lineas: [codigo ? 'CODIGO GUARDADO. LLAMANDO A BITACORA...' : 'LLAMANDO A BITACORA...'],
+        despues: ctx.bitacora(codigo || undefined).then(() => ({ lineas: ['HECHO. SI HAY ALGO NUEVO, SAL Y PULSA N PARA REVISARLO.'] })),
+      }
     }
     case 'cartas': {
       const holo = ctx.cartas.filter(c => c.holo).length

@@ -1,6 +1,6 @@
 import type { Object3D, PerspectiveCamera } from 'three'
 import type { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
-import type { Libro } from '../tipos'
+import type { Carta, Libro } from '../tipos'
 import type { Biblioteca } from './distribucion'
 
 // Lo que comparten la escena y la interfaz sin pasar por React en cada fotograma.
@@ -18,7 +18,8 @@ export const control: {
   biblioteca: Biblioteca | null
   carro: Object3D | null
   todos: Libro[]
-} = { mando: null, camara: null, biblioteca: null, carro: null, todos: [] }
+  cartas: Carta[]
+} = { mando: null, camara: null, biblioteca: null, carro: null, todos: [], cartas: [] }
 
 export function entrar() {
   control.mando?.lock()

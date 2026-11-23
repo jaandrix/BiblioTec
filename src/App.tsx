@@ -31,9 +31,10 @@ export default function App() {
   const alta = config.calidad === 'alta'
   const coleccion = useEstado(e => e.coleccion)
   const todos = useMemo(() => {
-    const base = [...LIBROS, ...coleccion.anadidos.filter(a => !LIBROS.some(l => l.id === a.id))]
+    const ejemplo = config.ejemplos ? LIBROS : []
+    const base = [...ejemplo, ...coleccion.anadidos.filter(a => !ejemplo.some(l => l.id === a.id))]
     return base.map(l => (coleccion.portadas[l.id] ? { ...l, portada: coleccion.portadas[l.id] } : l))
-  }, [coleccion.anadidos, coleccion.portadas])
+  }, [coleccion.anadidos, coleccion.portadas, config.ejemplos])
 
   // Los del carro ya cuentan en la estantería: así su hueco queda abierto y se
   // ilumina, y los vecinos se apartan para dejarle sitio.
@@ -43,6 +44,10 @@ export default function App() {
   }, [todos, coleccion.pendientes, config])
   control.biblioteca = biblioteca
   control.todos = todos
+  const pokemon = useEstado(e => e.pokemon)
+  const cartas = useMemo(() => [...(config.ejemplos ? CARTAS : []), ...pokemon.cartas.filter(c => !config.ejemplos || !CARTAS.some(d => d.id === c.id))], [config.ejemplos, pokemon.cartas])
+  const sellados = useMemo(() => [...(config.ejemplos ? SELLADOS : []), ...pokemon.sellados], [config.ejemplos, pokemon.sellados])
+  control.cartas = cartas
 
   const { libros, destinos, huecosCarro } = useMemo(() => {
     const porId = new Map(todos.map(l => [l.id, l]))
@@ -70,7 +75,7 @@ export default function App() {
         </Environment>
         <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} />
         <Entrada pendientes={coleccion.pendientes.length} />
-        <ZonaPokemon cartas={CARTAS} sellados={SELLADOS} />
+        <ZonaPokemon cartas={cartas} sellados={sellados} />
         <Carro cajas={cajas} />
         <Brazos />
         {libros.map(l => <Libro key={l.id} libro={l} destino={destinos.get(l.id)!} />)}
@@ -88,7 +93,7 @@ export default function App() {
           </EffectComposer>
         )}
       </Canvas>
-      <Interfaz libros={todos} cartas={CARTAS} sellados={SELLADOS} />
+      <Interfaz libros={todos} cartas={cartas} sellados={sellados} />
     </>
   )
 }
