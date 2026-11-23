@@ -15,6 +15,10 @@ Controles: clic para entrar, `w a s d` para moverse (`mayús` corre), ratón par
 
 Fase 1: sala, lomos del color de la portada, primera persona y abrir un libro con animación y ficha.
 Fase 3: mesa de entrada con lo pendiente, carro, huecos que se iluminan con flechas en el suelo, colocar libro a libro o todo de golpe, añadir libros por título desde el ordenador y contador de lo ordenado hoy.
-Fase 2: estanterías por género, ordenar por autor, saga, color, alfabético, año, páginas o fecha de alta con animación, ampliar estanterías y ordenador retro. La planificación y las decisiones están en `docs/planificacion/` (`06-decisiones.md` manda).
+Fase 2: estanterías por género, ordenar por autor, saga, color, alfabético, año, páginas o fecha de alta con animación, ampliar estanterías y ordenador retro.
+
+Resumen del estado en `docs/ESTADO.md`. La planificación y las decisiones están en `docs/planificacion/` (`06-decisiones.md` manda).
+
+Web de prueba: https://jaandrix.github.io/BiblioTec/
 
 Los libros de ejemplo salen de Open Library con `node scripts/preparar-demo.mjs`.
