@@ -1,0 +1,449 @@
+[
+  {
+    "id": "demo_OL893414W",
+    "tipo": "libro",
+    "titulo": "Dune",
+    "autor": "Frank Herbert",
+    "anio": 1965,
+    "paginas": 604,
+    "portada": "https://covers.openlibrary.org/b/id/11481354-L.jpg",
+    "saga": "Dune",
+    "tomo": 1
+  },
+  {
+    "id": "demo_OL893461W",
+    "tipo": "libro",
+    "titulo": "Dune Messiah",
+    "autor": "Frank Herbert",
+    "anio": 1969,
+    "paginas": 279,
+    "portada": "https://covers.openlibrary.org/b/id/980253-L.jpg",
+    "saga": "Dune",
+    "tomo": 2
+  },
+  {
+    "id": "demo_OL893516W",
+    "tipo": "libro",
+    "titulo": "Children of Dune",
+    "autor": "Frank Herbert",
+    "anio": 1976,
+    "paginas": 504,
+    "portada": "https://covers.openlibrary.org/b/id/6976407-L.jpg",
+    "saga": "Dune",
+    "tomo": 3
+  },
+  {
+    "id": "demo_OL82563W",
+    "tipo": "libro",
+    "titulo": "Harry Potter and the Philosopher's Stone",
+    "autor": "J. K. Rowling",
+    "anio": 1997,
+    "paginas": 302,
+    "portada": "https://covers.openlibrary.org/b/id/15155833-L.jpg",
+    "saga": "Harry Potter",
+    "tomo": 1
+  },
+  {
+    "id": "demo_OL82537W",
+    "tipo": "libro",
+    "titulo": "Harry Potter and the Chamber of Secrets",
+    "autor": "J. K. Rowling",
+    "anio": 1998,
+    "paginas": 339,
+    "portada": "https://covers.openlibrary.org/b/id/15158664-L.jpg",
+    "saga": "Harry Potter",
+    "tomo": 2
+  },
+  {
+    "id": "demo_OL82536W",
+    "tipo": "libro",
+    "titulo": "Harry Potter and the Prisoner of Azkaban",
+    "autor": "J. K. Rowling",
+    "anio": 1999,
+    "paginas": 416,
+    "portada": "https://covers.openlibrary.org/b/id/10580435-L.jpg",
+    "saga": "Harry Potter",
+    "tomo": 3
+  },
+  {
+    "id": "demo_OL82560W",
+    "tipo": "libro",
+    "titulo": "Harry Potter and the Goblet of Fire",
+    "autor": "J. K. Rowling",
+    "anio": 2000,
+    "paginas": 672,
+    "portada": "https://covers.openlibrary.org/b/id/12059372-L.jpg",
+    "saga": "Harry Potter",
+    "tomo": 4
+  },
+  {
+    "id": "demo_OL27513W",
+    "tipo": "libro",
+    "titulo": "The Fellowship of the Ring",
+    "autor": "J.R.R. Tolkien",
+    "anio": 1954,
+    "paginas": 492,
+    "portada": "https://covers.openlibrary.org/b/id/14627060-L.jpg",
+    "saga": "El Señor de los Anillos",
+    "tomo": 1
+  },
+  {
+    "id": "demo_OL27479W",
+    "tipo": "libro",
+    "titulo": "The Two Towers",
+    "autor": "J.R.R. Tolkien",
+    "anio": 1954,
+    "paginas": 434,
+    "portada": "https://covers.openlibrary.org/b/id/14627564-L.jpg",
+    "saga": "El Señor de los Anillos",
+    "tomo": 2
+  },
+  {
+    "id": "demo_OL27455W",
+    "tipo": "libro",
+    "titulo": "The Return of the King",
+    "autor": "J.R.R. Tolkien",
+    "anio": 1950,
+    "paginas": 499,
+    "portada": "https://covers.openlibrary.org/b/id/14627062-L.jpg",
+    "saga": "El Señor de los Anillos",
+    "tomo": 3
+  },
+  {
+    "id": "demo_OL27482W",
+    "tipo": "libro",
+    "titulo": "The Hobbit",
+    "autor": "J.R.R. Tolkien",
+    "anio": 1937,
+    "paginas": 310,
+    "portada": "https://covers.openlibrary.org/b/id/14627509-L.jpg"
+  },
+  {
+    "id": "demo_OL257943W",
+    "tipo": "libro",
+    "titulo": "A Game of Thrones",
+    "autor": "George R. R. Martin",
+    "anio": 1996,
+    "paginas": 801,
+    "portada": "https://covers.openlibrary.org/b/id/9269962-L.jpg",
+    "saga": "Canción de hielo y fuego",
+    "tomo": 1
+  },
+  {
+    "id": "demo_OL257939W",
+    "tipo": "libro",
+    "titulo": "A Clash of Kings",
+    "autor": "George R. R. Martin",
+    "anio": 1998,
+    "paginas": 761,
+    "portada": "https://covers.openlibrary.org/b/id/8231751-L.jpg",
+    "saga": "Canción de hielo y fuego",
+    "tomo": 2
+  },
+  {
+    "id": "demo_OL274505W",
+    "tipo": "libro",
+    "titulo": "Cien años de soledad",
+    "autor": "Gabriel García Márquez",
+    "anio": 1967,
+    "paginas": 432,
+    "portada": "https://covers.openlibrary.org/b/id/12627383-L.jpg"
+  },
+  {
+    "id": "demo_OL274518W",
+    "tipo": "libro",
+    "titulo": "El amor en los tiempos del cólera",
+    "autor": "Gabriel García Márquez",
+    "anio": 1985,
+    "paginas": 451,
+    "portada": "https://covers.openlibrary.org/b/id/10096404-L.jpg"
+  },
+  {
+    "id": "demo_OL503666W",
+    "tipo": "libro",
+    "titulo": "Don Quijote de la Mancha",
+    "autor": "Miguel de Cervantes Saavedra",
+    "anio": 1600,
+    "paginas": 519,
+    "portada": "https://covers.openlibrary.org/b/id/14428305-L.jpg"
+  },
+  {
+    "id": "demo_OL278437W",
+    "tipo": "libro",
+    "titulo": "La sombra del viento",
+    "autor": "Carlos Ruiz Zafón",
+    "anio": 2001,
+    "paginas": 528,
+    "portada": "https://covers.openlibrary.org/b/id/10107644-L.jpg"
+  },
+  {
+    "id": "demo_OL15165640W",
+    "tipo": "libro",
+    "titulo": "El Juego del Ángel",
+    "autor": "Carlos Ruiz Zafón",
+    "anio": 2008,
+    "paginas": 641,
+    "portada": "https://covers.openlibrary.org/b/id/9274818-L.jpg"
+  },
+  {
+    "id": "demo_OL11326416W",
+    "tipo": "libro",
+    "titulo": "1984 (adaptation)",
+    "autor": "Michael Dean",
+    "anio": 2003,
+    "paginas": 72,
+    "portada": "https://covers.openlibrary.org/b/id/8745958-L.jpg"
+  },
+  {
+    "id": "demo_OL1168007W",
+    "tipo": "libro",
+    "titulo": "Animal Farm",
+    "autor": "George Orwell",
+    "anio": 1945,
+    "paginas": 128,
+    "portada": "https://covers.openlibrary.org/b/id/11261770-L.jpg"
+  },
+  {
+    "id": "demo_OL64365W",
+    "tipo": "libro",
+    "titulo": "Brave New World",
+    "autor": "Aldous Huxley",
+    "anio": 1932,
+    "paginas": 241,
+    "portada": "https://covers.openlibrary.org/b/id/8231823-L.jpg"
+  },
+  {
+    "id": "demo_OL103123W",
+    "tipo": "libro",
+    "titulo": "Fahrenheit 451",
+    "autor": "Ray Bradbury",
+    "anio": 1953,
+    "paginas": 190,
+    "portada": "https://covers.openlibrary.org/b/id/12993656-L.jpg"
+  },
+  {
+    "id": "demo_OL468431W",
+    "tipo": "libro",
+    "titulo": "The Great Gatsby",
+    "autor": "F. Scott Fitzgerald",
+    "anio": 1920,
+    "paginas": 185,
+    "portada": "https://covers.openlibrary.org/b/id/10590366-L.jpg"
+  },
+  {
+    "id": "demo_OL66554W",
+    "tipo": "libro",
+    "titulo": "Pride and Prejudice",
+    "autor": "Jane Austen",
+    "anio": 1813,
+    "paginas": 351,
+    "portada": "https://covers.openlibrary.org/b/id/14348537-L.jpg"
+  },
+  {
+    "id": "demo_OL1095427W",
+    "tipo": "libro",
+    "titulo": "Jane Eyre",
+    "autor": "Charlotte Brontë",
+    "anio": 1847,
+    "paginas": 480,
+    "portada": "https://covers.openlibrary.org/b/id/8235363-L.jpg"
+  },
+  {
+    "id": "demo_OL450063W",
+    "tipo": "libro",
+    "titulo": "Frankenstein; or, The Modern Prometheus",
+    "autor": "Mary Shelley",
+    "anio": 1818,
+    "paginas": 240,
+    "portada": "https://covers.openlibrary.org/b/id/12356249-L.jpg"
+  },
+  {
+    "id": "demo_OL85892W",
+    "tipo": "libro",
+    "titulo": "Dracula",
+    "autor": "Bram Stoker",
+    "anio": 1897,
+    "paginas": 384,
+    "portada": "https://covers.openlibrary.org/b/id/12216503-L.jpg"
+  },
+  {
+    "id": "demo_OL45018229W",
+    "tipo": "libro",
+    "titulo": "Crime and Punishment",
+    "autor": "Fyodor Dostoevsky",
+    "anio": 1956,
+    "paginas": 582,
+    "portada": "https://covers.openlibrary.org/b/id/15183762-L.jpg"
+  },
+  {
+    "id": "demo_OL24259583W",
+    "tipo": "libro",
+    "titulo": "A day with the little prince",
+    "autor": "Antoine de Saint-Exupéry",
+    "anio": 2003,
+    "paginas": 10,
+    "portada": "https://covers.openlibrary.org/b/id/10746692-L.jpg"
+  },
+  {
+    "id": "demo_OL34766796W",
+    "tipo": "libro",
+    "titulo": "El Principito",
+    "autor": "Antoine de Saint-Exupéry",
+    "anio": 2018,
+    "paginas": 110,
+    "portada": "https://covers.openlibrary.org/b/id/13499066-L.jpg"
+  },
+  {
+    "id": "demo_OL872932W",
+    "tipo": "libro",
+    "titulo": "Siddhartha",
+    "autor": "Hermann Hesse",
+    "anio": 1922,
+    "paginas": 139,
+    "portada": "https://covers.openlibrary.org/b/id/6562535-L.jpg"
+  },
+  {
+    "id": "demo_OL17075811W",
+    "tipo": "libro",
+    "titulo": "Sapiens",
+    "autor": "Yuval Noah Harari",
+    "anio": 2011,
+    "paginas": 456,
+    "portada": "https://covers.openlibrary.org/b/id/8634250-L.jpg"
+  },
+  {
+    "id": "demo_OL21745884W",
+    "tipo": "libro",
+    "titulo": "Project Hail Mary",
+    "autor": "Andy Weir",
+    "anio": 2021,
+    "paginas": 496,
+    "portada": "https://covers.openlibrary.org/b/id/11200092-L.jpg"
+  },
+  {
+    "id": "demo_OL17091839W",
+    "tipo": "libro",
+    "titulo": "The Martian",
+    "autor": "Andy Weir",
+    "anio": 2011,
+    "paginas": 407,
+    "portada": "https://covers.openlibrary.org/b/id/11447888-L.jpg"
+  },
+  {
+    "id": "demo_OL8479867W",
+    "tipo": "libro",
+    "titulo": "The Name of the Wind",
+    "autor": "Patrick Rothfuss",
+    "anio": 2007,
+    "paginas": 736,
+    "portada": "https://covers.openlibrary.org/b/id/11480483-L.jpg"
+  },
+  {
+    "id": "demo_OL16044142W",
+    "tipo": "libro",
+    "titulo": "Mistborn",
+    "autor": "Brandon Sanderson",
+    "anio": 2001,
+    "paginas": 1712,
+    "portada": "https://covers.openlibrary.org/b/id/11329782-L.jpg"
+  },
+  {
+    "id": "demo_OL15358691W",
+    "tipo": "libro",
+    "titulo": "The Way of Kings",
+    "autor": "Brandon Sanderson",
+    "anio": 2010,
+    "paginas": 1008,
+    "portada": "https://covers.openlibrary.org/b/id/14658316-L.jpg"
+  },
+  {
+    "id": "demo_OL27258W",
+    "tipo": "libro",
+    "titulo": "Neuromancer",
+    "autor": "William Gibson",
+    "anio": 1984,
+    "paginas": 317,
+    "portada": "https://covers.openlibrary.org/b/id/283860-L.jpg"
+  },
+  {
+    "id": "demo_OL46125W",
+    "tipo": "libro",
+    "titulo": "Foundation",
+    "autor": "Isaac Asimov",
+    "anio": 1951,
+    "paginas": 240,
+    "portada": "https://covers.openlibrary.org/b/id/14612610-L.jpg"
+  },
+  {
+    "id": "demo_OL46241W",
+    "tipo": "libro",
+    "titulo": "I, Robot",
+    "autor": "Isaac Asimov",
+    "anio": 1950,
+    "paginas": 245,
+    "portada": "https://covers.openlibrary.org/b/id/12385229-L.jpg"
+  },
+  {
+    "id": "demo_OL2163649W",
+    "tipo": "libro",
+    "titulo": "The Hitchhiker's Guide to the Galaxy",
+    "autor": "Douglas Adams",
+    "anio": 1979,
+    "paginas": 216,
+    "portada": "https://covers.openlibrary.org/b/id/12986869-L.jpg"
+  },
+  {
+    "id": "demo_OL2625457W",
+    "tipo": "libro",
+    "titulo": "Norwegian Wood",
+    "autor": "村上春樹",
+    "anio": 1987,
+    "paginas": 389,
+    "portada": "https://covers.openlibrary.org/b/id/2237620-L.jpg"
+  },
+  {
+    "id": "demo_OL1905255W",
+    "tipo": "libro",
+    "titulo": "La casa de los espíritus",
+    "autor": "Isabel Allende",
+    "anio": 1982,
+    "paginas": 453,
+    "portada": "https://covers.openlibrary.org/b/id/3205226-L.jpg"
+  },
+  {
+    "id": "demo_OL14860424W",
+    "tipo": "libro",
+    "titulo": "Rayuela",
+    "autor": "Julio Cortázar",
+    "anio": 1963,
+    "paginas": 633,
+    "portada": "https://covers.openlibrary.org/b/id/1047466-L.jpg"
+  },
+  {
+    "id": "demo_OL110971W",
+    "tipo": "libro",
+    "titulo": "Ficciones",
+    "autor": "Jorge Luis Borges",
+    "anio": 1945,
+    "paginas": 196,
+    "portada": "https://covers.openlibrary.org/b/id/10832290-L.jpg"
+  },
+  {
+    "id": "demo_OL26387829W",
+    "tipo": "libro",
+    "titulo": "Patria",
+    "autor": "Fernando Aramburu",
+    "anio": 2014,
+    "paginas": 647,
+    "portada": "https://covers.openlibrary.org/b/id/12334964-L.jpg"
+  },
+  {
+    "id": "demo_OL20770492W",
+    "tipo": "libro",
+    "titulo": "El infinito en un junco",
+    "autor": "Irene Vallejo",
+    "anio": 2020,
+    "paginas": 464,
+    "portada": "https://covers.openlibrary.org/b/id/9689877-L.jpg"
+  }
+]
