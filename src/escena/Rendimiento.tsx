@@ -36,6 +36,22 @@ export function SombrasEstaticas({ version }: { version: unknown }) {
   return null
 }
 
+// Pintar la textura de un libro (canvas) cuesta 1 o 2 ms: al entrar en un
+// pasillo lleno se pedirían decenas a la vez. Se reparten: unas pocas por
+// fotograma.
+const cola: (() => void)[] = []
+export function encolarTextura(fn: () => void) {
+  cola.push(fn)
+}
+
+export function ProcesarTexturas() {
+  useFrame(() => {
+    const inicio = performance.now()
+    while (cola.length && performance.now() - inicio < 4) cola.shift()!()
+  })
+  return null
+}
+
 const NIVELES = ['alta', 'media', 'baja'] as const
 
 // Si va a menos de 28 imágenes por segundo, baja un nivel de calidad y avisa.

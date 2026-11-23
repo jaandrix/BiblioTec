@@ -7,7 +7,6 @@ import { PCFSoftShadowMap } from 'three'
 import librosDemo from './datos/libros-demo.json'
 import mediosDemo from './datos/medios-demo.json'
 import pokemonDemo from './datos/pokemon-demo.json'
-import { CAJAS_POKEMON, ZonaPokemon } from './escena/pokemon/ZonaPokemon'
 import { Brazos, Carro } from './escena/Carro'
 import { cajasDeChoque, construir } from './escena/distribucion'
 import { CAJA_MESA, Entrada, posicionesMesa } from './escena/Entrada'
@@ -18,7 +17,8 @@ import { Libro, type Destino } from './escena/Libro'
 import { control } from './escena/registro'
 import { Sala } from './escena/Sala'
 import { CAJA_TERMINAL, Terminal3D } from './escena/Terminal3D'
-import { CalidadAutomatica, SombrasEstaticas } from './escena/Rendimiento'
+import { CalidadAutomatica, ProcesarTexturas, SombrasEstaticas } from './escena/Rendimiento'
+import { LibrosLejanos } from './escena/Lejanos'
 import { useEstado } from './estado'
 import { colorDeLibro } from './libros/color'
 import type { Carta, Libro as TLibro, Sellado } from './tipos'
@@ -43,8 +43,8 @@ export default function App() {
   // ilumina, y los vecinos se apartan para dejarle sitio.
   const biblioteca = useMemo(() => {
     const enMesa = new Set(coleccion.pendientes)
-    return construir(todos.filter(l => !enMesa.has(l.id)), config, colorDeLibro)
-  }, [todos, coleccion.pendientes, config])
+    return construir(todos.filter(l => !enMesa.has(l.id)), config, colorDeLibro, new Set(coleccion.expuestos ?? []))
+  }, [todos, coleccion.pendientes, coleccion.expuestos, config])
   control.biblioteca = biblioteca
   control.todos = todos
   const pokemon = useEstado(e => e.pokemon)
@@ -65,7 +65,7 @@ export default function App() {
     return { libros, destinos, huecosCarro }
   }, [todos, biblioteca, coleccion.carro, coleccion.pendientes])
 
-  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA, ...CAJAS_POKEMON], [biblioteca])
+  const cajas = useMemo(() => [...cajasDeChoque(biblioteca.muebles), CAJA_TERMINAL, CAJA_MESA], [biblioteca])
 
   return (
     <>
@@ -76,12 +76,12 @@ export default function App() {
           <Lightformer intensity={0.6} color="#cfe6ff" position={[6, 2, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[6, 2, 1]} />
           <Lightformer intensity={0.4} color="#ffcf99" position={[-6, 2, 0]} rotation={[0, Math.PI / 2, 0]} scale={[6, 2, 1]} />
         </Environment>
-        <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} />
+        <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} manual={biblioteca.manual} />
         <Entrada pendientes={coleccion.pendientes.length} />
-        <ZonaPokemon cartas={cartas} sellados={sellados} />
         <Carro cajas={cajas} />
         <Brazos />
-        {libros.map(l => <Libro key={l.id} libro={l} destino={destinos.get(l.id)!} />)}
+        <LibrosLejanos cuantos={libros.length} />
+        {libros.map((l, i) => <Libro key={l.id} libro={l} destino={destinos.get(l.id)!} indice={i} />)}
         <Huecos huecos={huecosCarro} />
         <GuiaSuelo huecos={huecosCarro} />
         <Terminal3D libros={biblioteca.huecos.length} estanterias={biblioteca.secciones.length} />
@@ -89,6 +89,7 @@ export default function App() {
         <Jugador cajas={cajas} />
         <SombrasEstaticas version={biblioteca} />
         <CalidadAutomatica />
+        <ProcesarTexturas />
         {alta && (
           <EffectComposer multisampling={0}>
             <N8AO aoRadius={0.6} intensity={2.2} distanceFalloff={0.6} halfRes quality="performance" />

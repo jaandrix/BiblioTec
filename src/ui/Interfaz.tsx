@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { alternarGuiaSuelo, cambiarAjuste, cambiarEstado, hechosHoy, useEstado } from '../estado'
-import { entrar, huecoDe } from '../escena/registro'
+import { control, entrar, huecoDe } from '../escena/registro'
 import type { Carta, Libro, Sellado } from '../tipos'
 import { CajaAbierta, ElegirCaja, FichaCarta, FichaSellado, MenuOrdenCartas } from './Pokemon'
 import { Acceso, AjustesCuenta, Revision } from './Cuenta'
+import { EditorMapa } from './EditorMapa'
 import { EditorPortada } from './EditorPortada'
 import { MenuOrden } from './MenuOrden'
 import { Terminal } from './Terminal'
@@ -29,7 +30,7 @@ function Ficha({ libro }: { libro: Libro }) {
         {libro.tipo === 'videojuego' && <Fila etiqueta="plataforma." valor={libro.plataforma ?? 'sin indicar.'} />}
         {libro.tipo !== 'libro' && <Fila etiqueta="formato." valor={libro.formato === 'cartucho' ? 'cartucho suelto.' : libro.formato === 'caja' ? 'caja.' : libro.formato ?? 'dvd'} />}
         {libro.saga && <Fila etiqueta="saga." valor={`${libro.saga}, ${libro.tomo}`} />}
-        {h && <Fila etiqueta="aquí." valor={`${h.seccion}, mueble ${h.modulo + 1}, balda ${h.balda}`} />}
+        {h && <Fila etiqueta="aquí." valor={`${control.biblioteca?.secciones.find(s => s.id === h.seccion)?.nombre ?? h.seccion}, mueble ${h.modulo + 1}, balda ${h.balda}${h.expuesto ? ', de frente' : ''}`} />}
         <Fila etiqueta="en casa." valor={libro.ubicacion ?? 'sin ubicación.'} />
       </div>
       <ul className="controles-ficha">
@@ -37,6 +38,7 @@ function Ficha({ libro }: { libro: Libro }) {
         <li><kbd>f</kbd> darle la vuelta</li>
         <li><kbd>rueda</kbd> acercar o alejar</li>
         <li><kbd>p</kbd> cambiar la portada</li>
+        <li><kbd>x</kbd> exponer de frente o volver de lomo</li>
         <li><kbd>clic dcho.</kbd> devolverlo a la balda</li>
       </ul>
     </aside>
@@ -49,9 +51,10 @@ function Marcador() {
   const llevo = useEstado(e => e.llevoCarro)
   const hoy = useEstado(() => hechosHoy())
   const revision = useEstado(e => e.revision.length)
-  if (!pendientes && !carro && !hoy && llevo && !revision) return null
-  const paso = revision ? `${revision} ${revision === 1 ? 'cosa nueva' : 'cosas nuevas'} de bitácora. pulsa n para revisarlas.`
-    : !llevo ? 'el carro está aparcado. acércate y pulsa c para cogerlo.'
+  if (!pendientes && !carro && !hoy && !llevo && !revision) return null
+  const paso = llevo && !carro && !pendientes ? 'carro vacío. pulsa c para dejarlo y moverte libre.'
+    : revision ? `${revision} ${revision === 1 ? 'cosa nueva' : 'cosas nuevas'} de bitácora. pulsa n para revisarlas.`
+    : !llevo && pendientes ? 'en la mesa de la entrada hay cosas por ordenar. el carro está al lado: haz clic en una y se cogerá solo.'
     : carro ? 'sigue las flechas del suelo. donde va cada libro brilla un hueco con una flecha encima: apúntalo y haz clic.'
     : pendientes ? 'en la mesa de la entrada esperan libros. apunta a uno y haz clic para cogerlo (t coge todos).'
     : null
@@ -90,6 +93,7 @@ const CONTROLES: [string, string][] = [
   ['o', 'ordenar la estantería que miras'],
   ['g', 'flechas del suelo'],
   ['n', 'revisar lo nuevo de bitácora'],
+  ['m', 'editor de mapa: mover y cambiar estanterías'],
   ['esc', 'pausa'],
 ]
 
@@ -209,6 +213,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
   const carro = useEstado(e => e.coleccion.carro)
   const cajaAbierta = useEstado(e => e.cajaAbierta)
   const verRevision = useEstado(e => e.verRevision)
+  const editorMapa = useEstado(e => e.editorMapa)
   const guardarEnCaja = useEstado(e => e.guardarEnCaja)
   const libro = abierto ? libros.find(l => l.id === abierto) : null
   const carta = abierto ? cartas.find(c => c.id === abierto) : null
@@ -238,7 +243,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
     : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado (v vacía el carro aquí).</>
     : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
 
-  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar && !verRevision
+  const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar && !verRevision && !editorMapa
   return (
     <>
       {dentro && !mirando && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
@@ -255,6 +260,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
       {menuOrden && menuOrden !== 'pokemon' && <MenuOrden seccion={menuOrden} />}
       {libroEditar && <EditorPortada libro={libroEditar} />}
       {verRevision && <Revision />}
+      {editorMapa && <EditorMapa />}
       {pausa && <Pausa />}
       {sinNada && inicio && <Portada />}
       {sinNada && !inicio && <div className="seguir" onClick={entrar}>haz clic para seguir.</div>}

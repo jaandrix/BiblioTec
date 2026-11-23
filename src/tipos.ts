@@ -25,16 +25,26 @@ export type Criterio = 'autor' | 'saga' | 'color' | 'alfabetico' | 'anio' | 'pag
 export interface Seccion {
   id: string
   nombre: string
+  pasillo: 'libros' | 'películas' | 'series' | 'videojuegos'
+  plataforma?: string
   criterio: Criterio
   modulos: number
   libros: Libro[]
 }
 
-export interface Mueble {
+// Una estantería del mapa tal como la guarda el editor.
+export interface MuebleMapa {
   id: string
   x: number
   z: number
   giro: number
+  seccion: string | null
+  color: string
+  alto: number
+  baldas: number
+}
+
+export interface Mueble extends Omit<MuebleMapa, 'seccion'> {
   seccion: string
   indice: number
 }
@@ -44,6 +54,7 @@ export interface Hueco {
   posicion: [number, number, number]
   medidas: [number, number, number]
   giro: number
+  expuesto?: boolean
   seccion: string
   modulo: number
   balda: number

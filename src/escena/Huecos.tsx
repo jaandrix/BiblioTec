@@ -34,7 +34,7 @@ export function Huecos({ huecos }: { huecos: Hueco[] }) {
     <>
       <group ref={grupo}>
         {huecos.map(h => (
-          <group key={h.libro.id} position={h.posicion} rotation={[0, h.giro, 0]}>
+          <group key={h.libro.id} position={h.posicion} rotation={[0, h.giro - (h.expuesto ? Math.PI / 2 : 0), 0]}>
             <mesh material={material}>
               <boxGeometry args={[h.medidas[0] * 1.15, h.medidas[1] * 1.04, h.medidas[2] * 1.04]} />
             </mesh>

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { CajaCartas, Carta, Criterio, CriterioCartas, Libro, Sellado } from './tipos'
+import type { CajaCartas, Carta, Criterio, CriterioCartas, Libro, MuebleMapa, Sellado } from './tipos'
 import pokemonDemo from './datos/pokemon-demo.json'
 
 export interface Config {
@@ -12,6 +12,7 @@ export interface Config {
   fov: number
   sonido: boolean
   ejemplos: boolean
+  mapa?: { muebles: MuebleMapa[] }
 }
 
 export interface Coleccion {
@@ -20,6 +21,7 @@ export interface Coleccion {
   carro: string[]
   hoy: { fecha: string; n: number }
   portadas: Record<string, string>
+  expuestos: string[]
 }
 
 export interface Pokemon {
@@ -59,6 +61,7 @@ interface Estado {
   inicio: boolean
   llevoCarro: boolean
   editarPortada: string | null
+  editorMapa: boolean
   cajaAbierta: string | null
   guardarEnCaja: string | null
   pokemon: Pokemon
@@ -119,8 +122,10 @@ let estado: Estado = {
   menuOrden: null,
   pausa: false,
   inicio: true,
-  llevoCarro: true,
+  // Se empieza sin carro (aparcado junto a la mesa): se coge al necesitarlo.
+  llevoCarro: false,
   editarPortada: null,
+  editorMapa: false,
   cajaAbierta: null,
   guardarEnCaja: null,
   pokemon: leer<Pokemon>(CLAVE_POKEMON, pokemonInicial()),
@@ -130,7 +135,7 @@ let estado: Estado = {
   cuenta: null,
   aviso: null,
   config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'media', calidadAuto: true, fov: 62, sonido: true, ejemplos: true }),
-  coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {} }),
+  coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {}, expuestos: [] }),
 }
 const oyentes = new Set<() => void>()
 
@@ -187,11 +192,33 @@ export function cambiarCriterio(seccion: string, criterio: Criterio) {
 
 export function sumarModulo(seccion: string) {
   const c = estado.config
+  // Con el mapa hecho a mano, la estantería nueva se pone al lado de la
+  // última de esa sección (se puede recolocar en el editor).
+  if (c.mapa) {
+    const suyas = c.mapa.muebles.filter(m => m.seccion === seccion)
+    const ultima = suyas[suyas.length - 1]
+    const nueva = ultima
+      ? { ...ultima, id: 'm' + Date.now().toString(36), x: ultima.x + Math.cos(ultima.giro), z: ultima.z - Math.sin(ultima.giro) }
+      : { id: 'm' + Date.now().toString(36), x: 0, z: 2.5, giro: 0, seccion, color: '#8a5a34', alto: 2.1, baldas: 5 }
+    cambiarEstado({ config: { ...c, mapa: { muebles: [...c.mapa.muebles, nueva] } } })
+    return
+  }
   cambiarEstado({ config: { ...c, extra: { ...c.extra, [seccion]: (c.extra[seccion] ?? 0) + 1 } } })
 }
 
 export function cambiarAjuste<K extends keyof Config>(clave: K, valor: Config[K]) {
   cambiarEstado({ config: { ...estado.config, [clave]: valor } })
+}
+
+export function alternarExpuesto(id: string) {
+  const c = estado.coleccion
+  const expuestos = c.expuestos ?? []
+  cambiarEstado({ coleccion: { ...c, expuestos: expuestos.includes(id) ? expuestos.filter(x => x !== id) : [...expuestos, id] } })
+}
+
+export function guardarMapa(muebles: MuebleMapa[] | null) {
+  const { mapa: _, ...resto } = estado.config
+  cambiarEstado({ config: muebles ? { ...resto, mapa: { muebles } } : resto })
 }
 
 export function ponerPortada(id: string, url: string | null) {
@@ -284,6 +311,17 @@ export function anadirSellado(s: Sellado) {
 let numAviso = 0
 export function avisar(texto: string) {
   cambiarEstado({ aviso: { texto, n: ++numAviso } })
+}
+
+// Muchos de golpe (importar de Libib): o a la mesa para ordenarlos a mano, o
+// directos a su estantería. Los que ya estén (mismo título y tipo) se saltan.
+export function anadirVarios(libros: Libro[], directo: boolean, existentes: Libro[]) {
+  const clave = (l: Libro) => `${l.tipo}|${l.titulo.trim().toLowerCase()}`
+  const ya = new Set(existentes.map(clave))
+  const nuevos = libros.filter(l => !ya.has(clave(l)) && (ya.add(clave(l)), true))
+  const c = estado.coleccion
+  cambiarEstado({ coleccion: { ...c, anadidos: [...c.anadidos, ...nuevos], pendientes: directo ? c.pendientes : [...c.pendientes, ...nuevos.map(l => l.id)] } })
+  return nuevos.length
 }
 
 export function hechosHoy() {

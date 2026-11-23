@@ -1,10 +1,19 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Group, Mesh, Quaternion, Vector3 } from 'three'
+import { BoxGeometry, BufferGeometry, CapsuleGeometry, DoubleSide, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Quaternion, SphereGeometry, Vector3 } from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { leerEstado } from '../estado'
 import type { Caja } from '../tipos'
 import { SALA } from './distribucion'
 import { control, interactivos } from './registro'
+import { madera } from './texturas'
+
+// Une piezas que comparten material (sin índices, para poder mezclar cajas,
+// cilindros y cápsulas).
+function unir(piezas: BufferGeometry[]) {
+  const sueltas = piezas.map(g => (g.index ? g.toNonIndexed() : g))
+  return mergeGeometries(sueltas, false)
+}
 
 const ANCHO = 0.86
 const FONDO = 0.46
@@ -38,20 +47,42 @@ export function cajaCarroAparcado(): Caja {
   return { min: [c.position.x - r, c.position.z - r], max: [c.position.x + r, c.position.z + r] }
 }
 
-const METAL = '#3d3a36'
-const MANGA = '#34405a'
-const PIEL = '#e0b08a'
 const ARRIBA = new Vector3(0, 1, 0)
+const ASA_Y = SUELO_CESTA + 0.5
+const ASA_Z = FONDO / 2 + 0.03
 
-// Brazos en primera persona: del hombro (fijo a la cámara) a la mano, que agarra
-// el asa del carro. Con un codo, para que no parezcan palos.
+// ------------------------------------------------------------------ brazos
+// Del hombro (fijo a la cámara) al puño del asa, con codo, puño de la manga y
+// una mano que agarra el asa con los dedos alrededor.
+const M_MANGA = new MeshStandardMaterial({ color: '#3b4a68', roughness: 0.92 })
+const M_PUNO = new MeshStandardMaterial({ color: '#2a3550', roughness: 0.9 })
+// Doble cara: la mano izquierda es la derecha en espejo (escala negativa).
+const M_PIEL = new MeshStandardMaterial({ color: '#e3b48d', roughness: 0.65, side: DoubleSide })
+const G_BRAZO = new CylinderGeometry(0.052, 0.046, 1, 14)
+const G_ANTEBRAZO = new CylinderGeometry(0.046, 0.04, 1, 14)
+const G_CODO = new SphereGeometry(0.049, 14, 10)
+const G_PUNO = new CylinderGeometry(0.044, 0.044, 0.035, 14)
+const G_MANO = unir([
+  trasladar(new BoxGeometry(0.07, 0.03, 0.075), 0, 0.022, -0.005),
+  ...[-0.026, -0.009, 0.009, 0.026].map(x => trasladar(new CapsuleGeometry(0.0085, 0.03, 4, 8).rotateX(Math.PI / 2 - 0.5), x, 0.004, -0.04)),
+  ...[-0.026, -0.009, 0.009, 0.026].map(x => trasladar(new CapsuleGeometry(0.008, 0.02, 4, 8), x, -0.018, -0.03)),
+  trasladar(new CapsuleGeometry(0.009, 0.028, 4, 8).rotateZ(1.1), -0.045, 0.01, 0.0),
+])
+
+function trasladar<T extends BufferGeometry>(g: T, x: number, y: number, z: number) {
+  g.translate(x, y, z)
+  return g
+}
+
 function Brazo({ lado }: { lado: 1 | -1 }) {
   const brazo = useRef<Mesh>(null!)
   const antebrazo = useRef<Mesh>(null!)
+  const codo = useRef<Mesh>(null!)
+  const puno = useRef<Mesh>(null!)
   const mano = useRef<Mesh>(null!)
-  const v = useMemo(() => ({ hombro: new Vector3(), codo: new Vector3(), mano: new Vector3(), d: new Vector3(), q: new Quaternion() }), [])
+  const v = useMemo(() => ({ hombro: new Vector3(), codo: new Vector3(), mano: new Vector3(), muneca: new Vector3(), d: new Vector3() }), [])
 
-  const unir = (m: Mesh, a: Vector3, b: Vector3) => {
+  const unirPiezas = (m: Mesh, a: Vector3, b: Vector3) => {
     v.d.subVectors(b, a)
     const largo = v.d.length()
     m.position.addVectors(a, b).multiplyScalar(0.5)
@@ -62,35 +93,34 @@ function Brazo({ lado }: { lado: 1 | -1 }) {
   useFrame(() => {
     const cam = control.camara, carro = control.carro
     const visible = !!cam && !!carro && leerEstado().llevoCarro && !leerEstado().abierto
-    brazo.current.visible = antebrazo.current.visible = mano.current.visible = visible
+    for (const r of [brazo, antebrazo, codo, puno, mano]) r.current.visible = visible
     if (!visible) return
-    v.hombro.set(lado * 0.24, -0.34, 0.12).applyMatrix4(cam.matrixWorld)
-    v.mano.set(lado * 0.27, SUELO_CESTA + 0.5, FONDO / 2 + 0.01)
+    v.hombro.set(lado * 0.24, -0.36, 0.14).applyMatrix4(cam.matrixWorld)
+    v.mano.set(lado * 0.27, ASA_Y, ASA_Z)
     carro.localToWorld(v.mano)
-    v.codo.lerpVectors(v.hombro, v.mano, 0.5)
-    v.codo.y -= 0.1
-    v.d.set(lado * 0.07, 0, 0).applyQuaternion(cam.quaternion)
+    v.muneca.set(lado * 0.27, ASA_Y + 0.035, ASA_Z + 0.07)
+    carro.localToWorld(v.muneca)
+    v.codo.lerpVectors(v.hombro, v.muneca, 0.5)
+    v.codo.y -= 0.09
+    v.d.set(lado * 0.08, 0, 0).applyQuaternion(cam.quaternion)
     v.codo.add(v.d)
-    unir(brazo.current, v.hombro, v.codo)
-    unir(antebrazo.current, v.codo, v.mano)
+    unirPiezas(brazo.current, v.hombro, v.codo)
+    unirPiezas(antebrazo.current, v.codo, v.muneca)
+    codo.current.position.copy(v.codo)
+    puno.current.position.copy(v.muneca)
+    puno.current.quaternion.copy(antebrazo.current.quaternion)
     mano.current.position.copy(v.mano)
     mano.current.quaternion.copy(carro.quaternion)
+    mano.current.scale.set(lado, 1, 1)
   })
 
   return (
     <>
-      <mesh ref={brazo}>
-        <cylinderGeometry args={[0.05, 0.045, 1, 10]} />
-        <meshStandardMaterial color={MANGA} roughness={0.85} />
-      </mesh>
-      <mesh ref={antebrazo}>
-        <cylinderGeometry args={[0.042, 0.036, 1, 10]} />
-        <meshStandardMaterial color={MANGA} roughness={0.85} />
-      </mesh>
-      <mesh ref={mano}>
-        <boxGeometry args={[0.075, 0.06, 0.1]} />
-        <meshStandardMaterial color={PIEL} roughness={0.7} />
-      </mesh>
+      <mesh ref={brazo} geometry={G_BRAZO} material={M_MANGA} />
+      <mesh ref={codo} geometry={G_CODO} material={M_MANGA} />
+      <mesh ref={antebrazo} geometry={G_ANTEBRAZO} material={M_MANGA} />
+      <mesh ref={puno} geometry={G_PUNO} material={M_PUNO} />
+      <mesh ref={mano} geometry={G_MANO} material={M_PIEL} />
     </>
   )
 }
@@ -98,7 +128,47 @@ function Brazo({ lado }: { lado: 1 | -1 }) {
 export function Brazos() {
   return <><Brazo lado={1} /><Brazo lado={-1} /></>
 }
-const MADERA = '#a8754a'
+
+// ------------------------------------------------------------------- carro
+// Carro de biblioteca: dos baldas de madera con laterales, armazón de tubo
+// oscuro, asa con puños de goma y cuatro ruedas con buje. Las piezas de cada
+// material van unidas: cuatro llamadas de dibujo en total.
+function tubo(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, r = 0.012) {
+  const a = new Vector3(x1, y1, z1), b = new Vector3(x2, y2, z2)
+  const d = b.clone().sub(a)
+  const g = new CylinderGeometry(r, r, d.length(), 10)
+  g.applyQuaternion(new Quaternion().setFromUnitVectors(ARRIBA, d.normalize()))
+  const m = a.add(b).multiplyScalar(0.5)
+  return g.translate(m.x, m.y, m.z)
+}
+
+const PIEZAS_CARRO = (() => {
+  const madera: BufferGeometry[] = [
+    trasladar(new BoxGeometry(ANCHO, 0.03, FONDO), 0, SUELO_CESTA - 0.015, 0),
+    trasladar(new BoxGeometry(ANCHO, 0.025, FONDO), 0, 0.16, 0),
+    ...[-1, 1].map(s => trasladar(new BoxGeometry(0.022, ALTO_CESTA, FONDO), s * (ANCHO / 2 - 0.011), SUELO_CESTA + ALTO_CESTA / 2 - 0.03, 0)),
+    ...[-1, 1].map(s => trasladar(new BoxGeometry(0.022, 0.12, FONDO), s * (ANCHO / 2 - 0.011), 0.21, 0)),
+    trasladar(new BoxGeometry(ANCHO, 0.11, 0.02), 0, SUELO_CESTA + 0.05, -FONDO / 2 + 0.01),
+    trasladar(new BoxGeometry(ANCHO, 0.05, 0.02), 0, SUELO_CESTA + 0.02, FONDO / 2 - 0.01),
+    trasladar(new BoxGeometry(ANCHO, 0.06, 0.02), 0, 0.2, -FONDO / 2 + 0.01),
+  ]
+  const metal: BufferGeometry[] = [
+    ...[-1, 1].flatMap(sx => [-1, 1].map(sz => tubo(sx * (ANCHO / 2 - 0.02), 0.07, sz * (FONDO / 2 - 0.02), sx * (ANCHO / 2 - 0.02), SUELO_CESTA + 0.02, sz * (FONDO / 2 - 0.02)))),
+    ...[-1, 1].map(s => tubo(s * (ANCHO / 2 - 0.02), SUELO_CESTA, FONDO / 2 - 0.02, s * (ANCHO / 2 - 0.02), ASA_Y - 0.02, ASA_Z, 0.013)),
+    tubo(-ANCHO / 2 + 0.02, ASA_Y, ASA_Z, ANCHO / 2 - 0.02, ASA_Y, ASA_Z, 0.015),
+    ...[-1, 1].flatMap(sx => [-1, 1].map(sz => trasladar(new BoxGeometry(0.03, 0.05, 0.03), sx * (ANCHO / 2 - 0.02), 0.07, sz * (FONDO / 2 - 0.02)))),
+  ]
+  const goma: BufferGeometry[] = [
+    ...[-1, 1].flatMap(sx => [-1, 1].map(sz => trasladar(new CylinderGeometry(0.042, 0.042, 0.026, 18).rotateZ(Math.PI / 2), sx * (ANCHO / 2 - 0.02), 0.042, sz * (FONDO / 2 - 0.02)))),
+    ...[-1, 1].map(s => trasladar(new CylinderGeometry(0.02, 0.02, 0.11, 12).rotateZ(Math.PI / 2), s * 0.27, ASA_Y, ASA_Z)),
+  ]
+  const buje: BufferGeometry[] = [-1, 1].flatMap(sx => [-1, 1].map(sz => trasladar(new CylinderGeometry(0.018, 0.018, 0.03, 12).rotateZ(Math.PI / 2), sx * (ANCHO / 2 - 0.02), 0.042, sz * (FONDO / 2 - 0.02))))
+  return { madera: unir(madera), metal: unir(metal), goma: unir(goma), buje: unir(buje) }
+})()
+const M_MADERA_CARRO = new MeshStandardMaterial({ map: madera('#a8754a'), roughness: 0.6 })
+const M_METAL = new MeshStandardMaterial({ color: '#33302c', metalness: 0.7, roughness: 0.35 })
+const M_GOMA = new MeshStandardMaterial({ color: '#1a1918', roughness: 0.95 })
+const M_BUJE = new MeshStandardMaterial({ color: '#b9bcc0', metalness: 0.8, roughness: 0.3 })
 
 export function Carro({ cajas }: { cajas: Caja[] }) {
   const grupo = useRef<Group>(null!)
@@ -118,7 +188,11 @@ export function Carro({ cajas }: { cajas: Caja[] }) {
     const cam = control.camara
     if (!cam) return
     // Aparcado se queda donde lo dejaste.
-    if (listo.current && !leerEstado().llevoCarro) return
+    if (!leerEstado().llevoCarro) {
+      // Al empezar, el carro espera aparcado junto a la mesa de la entrada.
+      if (!listo.current) { listo.current = true; grupo.current.position.set(1.75, 0, 2.55); grupo.current.rotation.y = 0.4 }
+      return
+    }
     cam.getWorldDirection(dir)
     dir.y = 0
     dir.normalize()
@@ -140,49 +214,12 @@ export function Carro({ cajas }: { cajas: Caja[] }) {
     g.rotation.y += delta * k
   })
 
-  const postes = [-1, 1].flatMap(sx => [-1, 1].map(sz => [sx * (ANCHO / 2 - 0.02), sz * (FONDO / 2 - 0.02)] as const))
   return (
     <group ref={grupo}>
-      <mesh position={[0, SUELO_CESTA - 0.015, 0]} receiveShadow>
-        <boxGeometry args={[ANCHO, 0.03, FONDO]} />
-        <meshStandardMaterial color={MADERA} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 0.16, 0]}>
-        <boxGeometry args={[ANCHO, 0.025, FONDO]} />
-        <meshStandardMaterial color={MADERA} roughness={0.8} />
-      </mesh>
-      {[-1, 1].map(s => (
-        <mesh key={`l${s}`} position={[s * (ANCHO / 2 - 0.01), SUELO_CESTA + ALTO_CESTA / 2 - 0.03, 0]}>
-          <boxGeometry args={[0.02, ALTO_CESTA, FONDO]} />
-          <meshStandardMaterial color={MADERA} roughness={0.8} />
-        </mesh>
-      ))}
-      <mesh position={[0, SUELO_CESTA + 0.05, -FONDO / 2 + 0.01]}>
-        <boxGeometry args={[ANCHO, 0.1, 0.02]} />
-        <meshStandardMaterial color={MADERA} roughness={0.8} />
-      </mesh>
-      {postes.map(([x, z]) => (
-        <group key={`${x}${z}`}>
-          <mesh position={[x, (SUELO_CESTA + 0.04) / 2, z]}>
-            <cylinderGeometry args={[0.012, 0.012, SUELO_CESTA - 0.04, 8]} />
-            <meshStandardMaterial color={METAL} metalness={0.5} roughness={0.5} />
-          </mesh>
-          <mesh position={[x, 0.04, z]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.04, 0.04, 0.03, 12]} />
-            <meshStandardMaterial color="#1e1c1a" roughness={0.9} />
-          </mesh>
-        </group>
-      ))}
-      {[-1, 1].map(s => (
-        <mesh key={`m${s}`} position={[s * (ANCHO / 2 - 0.02), SUELO_CESTA + 0.25, FONDO / 2 - 0.02]}>
-          <cylinderGeometry args={[0.012, 0.012, 0.5, 8]} />
-          <meshStandardMaterial color={METAL} metalness={0.5} roughness={0.5} />
-        </mesh>
-      ))}
-      <mesh position={[0, SUELO_CESTA + 0.5, FONDO / 2 - 0.02]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.016, 0.016, ANCHO, 10]} />
-        <meshStandardMaterial color={METAL} metalness={0.5} roughness={0.5} />
-      </mesh>
+      <mesh geometry={PIEZAS_CARRO.madera} material={M_MADERA_CARRO} receiveShadow />
+      <mesh geometry={PIEZAS_CARRO.metal} material={M_METAL} />
+      <mesh geometry={PIEZAS_CARRO.goma} material={M_GOMA} />
+      <mesh geometry={PIEZAS_CARRO.buje} material={M_BUJE} />
     </group>
   )
 }

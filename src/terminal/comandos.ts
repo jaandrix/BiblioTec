@@ -15,6 +15,8 @@ export interface Contexto {
   crearCaja: (nombre: string) => void
   precio: (tcgdex: string) => Promise<number | null>
   bitacora: (codigo?: string) => Promise<void>
+  abrirMapa: () => void
+  importarLibib: () => void
   ordenar: (seccion: string, criterio: Criterio) => void
   ampliar: (seccion: string) => void
   guiar: (id: string) => void
@@ -77,6 +79,8 @@ export const AYUDA = [
   '  ELEGIR <N>           LO DEJA EN LA MESA DE LA ENTRADA',
   '  COLOCAR TODO         COLOCA SOLO LO PENDIENTE Y EL CARRO',
   '  BITACORA [CODIGO]    CONECTA O TRAE LO NUEVO DE BITACORA',
+  '  MAPA                 EDITOR DE LA BIBLIOTECA (TAMBIEN TECLA M)',
+  '  IMPORTAR LIBIB       TRAE TU COLECCION DESDE UN CSV DE LIBIB',
   '  CARTAS               RESUMEN DE TU COLECCION POKEMON',
   '  CAJAS                CAJAS DE CARTAS Y SU OCUPACION',
   '  CAJA NUEVA <NOMBRE>  CREA UNA CAJA NEGRA (25 CARTAS)',
@@ -230,6 +234,12 @@ export function ejecutar(linea: string, ctx: Contexto): Respuesta {
       ctx.colocarTodo()
       return { lineas: [`COLOCANDO ${n} ${n === 1 ? 'LIBRO' : 'LIBROS'} EN SU SITIO... HECHO.`] }
     }
+    case 'mapa': case 'editor':
+      ctx.abrirMapa()
+      return { lineas: ['ABRIENDO EL MAPA...'] }
+    case 'importar':
+      ctx.importarLibib()
+      return { lineas: ['ELIGE EL ARCHIVO CSV QUE EXPORTASTE DE LIBIB (AJUSTES, EXPORTAR).'] }
     case 'bitacora': {
       const codigo = arg.trim()
       if (codigo && !/^[a-f0-9]{48,128}$/i.test(codigo)) return { lineas: ['ESE CODIGO NO PARECE BUENO. COPIALO DE BITACORA: AJUSTES, CONEXIONES, BIBLIOTEC.'] }

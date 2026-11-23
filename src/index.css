@@ -247,3 +247,25 @@ kbd {
 
 .atajos-revision { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .atajos-revision button { font-size: 12px !important; padding: 6px 10px !important; }
+
+.editor-mapa-velo { background: rgba(14, 10, 7, 0.82); }
+.editor-mapa { display: flex; gap: 20px; align-items: flex-start; max-width: 96vw; max-height: 94vh; }
+.mapa-lienzo { overflow: auto; max-height: 90vh; max-width: 70vw; border-radius: 12px; }
+.mapa-lienzo svg { display: block; touch-action: none; }
+.mapa-lienzo .pista { margin: 8px 0 0; font-size: 12px; color: var(--tinta-suave); }
+.editor-mapa aside { width: 280px; background: var(--fondo-panel); border-radius: 12px; padding: 20px; display: grid; gap: 14px; }
+.editor-mapa h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.editor-mapa button { font: inherit; font-size: 13px; border: 0; border-radius: 10px; padding: 8px 12px; cursor: pointer; background: #3a2e25; color: var(--tinta); }
+.editor-mapa button:hover { background: #4a3b2f; }
+.editor-mapa button.principal { background: var(--acento); color: #241c16; font-weight: 600; }
+.editor-mapa .propiedades { display: grid; gap: 12px; font-size: 13px; }
+.editor-mapa label, .editor-mapa .propiedades > div { display: grid; gap: 6px; }
+.editor-mapa label span, .editor-mapa .propiedades > div > span { color: var(--tinta-suave); }
+.editor-mapa select { font: inherit; font-size: 13px; padding: 7px; border-radius: 8px; background: #1a1410; color: var(--tinta); border: 1px solid #4a3b2f; }
+.editor-mapa input[type=range] { accent-color: var(--acento); }
+.muestras { display: flex; flex-wrap: wrap; gap: 6px; }
+.muestras button { width: 26px; height: 26px; padding: 0 !important; border-radius: 8px !important; border: 2px solid rgba(255,255,255,0.15) !important; }
+.muestras button.activa { border-color: var(--acento) !important; }
+.fila-botones { display: flex; gap: 6px; flex-wrap: wrap; }
+.pie-editor { display: grid; gap: 8px; border-top: 1px solid #3a2e25; padding-top: 14px; }
+.editor-mapa .nota { color: var(--tinta-suave); font-size: 13px; margin: 0; }

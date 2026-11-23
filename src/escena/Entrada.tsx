@@ -3,7 +3,7 @@ import { CanvasTexture, SRGBColorSpace } from 'three'
 import type { Caja, Libro } from '../tipos'
 import { grosorLibro } from './distribucion'
 
-export const MESA = { x: 2.9, z: 0.7, ancho: 1.5, fondo: 0.85, alto: 0.8 }
+export const MESA = { x: 2.9, z: 1.7, ancho: 1.5, fondo: 0.85, alto: 0.8 }
 export const CAJA_MESA: Caja = {
   min: [MESA.x - MESA.ancho / 2, MESA.z - MESA.fondo / 2],
   max: [MESA.x + MESA.ancho / 2, MESA.z + MESA.fondo / 2],

@@ -1,14 +1,14 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { CanvasTexture, Group, MeshStandardMaterial, SRGBColorSpace } from 'three'
+import { BufferGeometry, CanvasTexture, Color, Group, MeshStandardMaterial, SRGBColorSpace } from 'three'
 import { CRITERIOS } from '../libros/orden'
 import type { Mueble, Seccion } from '../tipos'
-import { ISLA_Z, MUEBLE, SALA } from './distribucion'
+import { Consola } from './Consolas'
+import { centroPasillo, MUEBLE, pasillosDe, SALA } from './distribucion'
 import { unirCajas } from './fusionar'
 import { alfombra, madera, pared, sueloMadera } from './texturas'
 
 const MADERA = '#8a5a34'
-const MADERA_CLARA = '#a8754a'
 
 function texturaCartel(lineas: { texto: string; peso: number; tam: number; color: string }[], ancho: number, alto: number, fondo: string) {
   const lienzo = document.createElement('canvas')
@@ -17,6 +17,9 @@ function texturaCartel(lineas: { texto: string; peso: number; tam: number; color
   const ctx = lienzo.getContext('2d')!
   ctx.fillStyle = fondo
   ctx.fillRect(0, 0, ancho, alto)
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)'
+  ctx.lineWidth = 6
+  ctx.strokeRect(3, 3, ancho - 6, alto - 6)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   const total = lineas.reduce((s, l) => s + l.tam * 1.25, 0)
@@ -34,7 +37,7 @@ function texturaCartel(lineas: { texto: string; peso: number; tam: number; color
   return t
 }
 
-function Cartel({ seccion }: { seccion: Seccion }) {
+function Cartel({ seccion, alto, ancho }: { seccion: Seccion; alto: number; ancho: number }) {
   const criterio = CRITERIOS.find(c => c.id === seccion.criterio)?.nombre ?? seccion.criterio
   const textura = useMemo(
     () => texturaCartel([
@@ -43,93 +46,110 @@ function Cartel({ seccion }: { seccion: Seccion }) {
     ], 512, 180, '#f3e6cf'),
     [seccion.nombre, criterio],
   )
+  const x = seccion.plataforma ? -0.2 : 0
   return (
-    <mesh position={[0, MUEBLE.alto + 0.16, MUEBLE.fondo / 2 - 0.02]} castShadow>
-      <boxGeometry args={[0.8, 0.28, 0.02]} />
-      <meshStandardMaterial attach="material-0" color={MADERA} />
-      <meshStandardMaterial attach="material-1" color={MADERA} />
-      <meshStandardMaterial attach="material-2" color={MADERA} />
-      <meshStandardMaterial attach="material-3" color={MADERA} />
-      <meshStandardMaterial attach="material-4" map={textura} roughness={0.9} />
-      <meshStandardMaterial attach="material-5" color={MADERA} />
+    <mesh position={[x, alto + 0.16, MUEBLE.fondo / 2 - 0.01]}>
+      <planeGeometry args={[ancho, ancho * 0.35]} />
+      <meshStandardMaterial map={textura} roughness={0.9} />
     </mesh>
   )
 }
 
-// Todas las estanterías son iguales: se comparten geometría y materiales, y
-// cada una son tres piezas (laterales, fondo y baldas) en vez de nueve.
-let piezasEstanteria: { lados: ReturnType<typeof unirCajas>; fondo: ReturnType<typeof unirCajas>; baldas: ReturnType<typeof unirCajas>; mLados: MeshStandardMaterial; mFondo: MeshStandardMaterial; mBaldas: MeshStandardMaterial } | null = null
-function estanteriaCompartida() {
-  if (piezasEstanteria) return piezasEstanteria
-  const t = MUEBLE.tabla
-  const paso = (MUEBLE.alto - t) / MUEBLE.baldas
-  piezasEstanteria = {
-    lados: unirCajas([-1, 1].map(lado => ({ medidas: [t, MUEBLE.alto, MUEBLE.fondo], posicion: [lado * (MUEBLE.ancho / 2 - t / 2), MUEBLE.alto / 2, 0] }))),
-    fondo: unirCajas([{ medidas: [MUEBLE.ancho - 2 * t, MUEBLE.alto, 0.012], posicion: [0, MUEBLE.alto / 2, -MUEBLE.fondo / 2 + 0.006] }]),
-    baldas: unirCajas(Array.from({ length: MUEBLE.baldas + 1 }, (_, i) => ({ medidas: [MUEBLE.ancho - 2 * t, t, MUEBLE.fondo], posicion: [0, i * paso + t / 2, 0] }))),
-    mLados: new MeshStandardMaterial({ map: madera(MADERA, false), roughness: 0.75 }),
-    mFondo: new MeshStandardMaterial({ map: madera('#7a4e2c', false), roughness: 0.9 }),
-    mBaldas: new MeshStandardMaterial({ map: madera(MADERA_CLARA), roughness: 0.7 }),
+// Las estanterías del mismo alto y número de baldas comparten geometría, y
+// las del mismo color comparten materiales: tres piezas por estantería.
+const geometrias = new Map<string, { lados: BufferGeometry; fondo: BufferGeometry; baldas: BufferGeometry }>()
+const materiales = new Map<string, { lados: MeshStandardMaterial; fondo: MeshStandardMaterial; baldas: MeshStandardMaterial }>()
+
+function geometriaEstanteria(alto: number, baldas: number) {
+  const clave = `${alto}-${baldas}`
+  if (!geometrias.has(clave)) {
+    const t = MUEBLE.tabla
+    const paso = (alto - t) / baldas
+    geometrias.set(clave, {
+      lados: unirCajas([-1, 1].map(lado => ({ medidas: [t, alto, MUEBLE.fondo], posicion: [lado * (MUEBLE.ancho / 2 - t / 2), alto / 2, 0] }))),
+      fondo: unirCajas([{ medidas: [MUEBLE.ancho - 2 * t, alto, 0.012], posicion: [0, alto / 2, -MUEBLE.fondo / 2 + 0.006] }]),
+      baldas: unirCajas([
+        ...Array.from({ length: baldas + 1 }, (_, i) => ({ medidas: [MUEBLE.ancho - 2 * t, t, MUEBLE.fondo] as [number, number, number], posicion: [0, i * paso + t / 2, 0] as [number, number, number] })),
+        { medidas: [MUEBLE.ancho, 0.05, MUEBLE.fondo + 0.02], posicion: [0, alto + 0.025, 0.005] },
+        { medidas: [MUEBLE.ancho - 2 * t, 0.08, 0.015], posicion: [0, 0.04, MUEBLE.fondo / 2 - 0.0075] },
+      ]),
+    })
   }
-  return piezasEstanteria
+  return geometrias.get(clave)!
+}
+
+function oscurecer(hex: string, k: number) {
+  return '#' + new Color(hex).multiplyScalar(k).getHexString()
+}
+
+function materialesEstanteria(color: string) {
+  if (!materiales.has(color)) {
+    const esMadera = color === MADERA
+    materiales.set(color, {
+      lados: new MeshStandardMaterial(esMadera ? { map: madera(MADERA, false), roughness: 0.72 } : { color, roughness: 0.55 }),
+      fondo: new MeshStandardMaterial(esMadera ? { map: madera('#7a4e2c', false), roughness: 0.9 } : { color: oscurecer(color, 0.82), roughness: 0.7 }),
+      baldas: new MeshStandardMaterial(esMadera ? { map: madera('#a8754a'), roughness: 0.65 } : { color: oscurecer(color, 1.08), roughness: 0.5 }),
+    })
+  }
+  return materiales.get(color)!
 }
 
 function Estanteria({ m, seccion }: { m: Mueble; seccion?: Seccion }) {
-  const piezas = estanteriaCompartida()
+  const g = geometriaEstanteria(m.alto, m.baldas)
+  const mat = materialesEstanteria(m.color)
   const grupo = useRef<Group>(null!)
   const crecer = useRef(0)
   const colocado = useRef(false)
 
-  // Un mueble nuevo (al ampliar) sube desde el suelo; uno que se corre de sitio
-  // porque otro creció se desliza a la vez que sus libros.
+  // Una estantería nueva sube desde el suelo; una que cambia de sitio se
+  // desliza a la vez que sus libros. Quieta, no hace nada.
   useFrame((_, dt) => {
-    const g = grupo.current
+    const o = grupo.current
     if (!colocado.current) {
       colocado.current = true
-      g.position.set(m.x, 0, m.z)
-      g.rotation.y = m.giro
+      o.position.set(m.x, 0, m.z)
+      o.rotation.y = m.giro
     }
+    const dx = m.x - o.position.x, dz = m.z - o.position.z, dg = m.giro - o.rotation.y
+    if (crecer.current >= 1 && Math.abs(dx) + Math.abs(dz) + Math.abs(dg) < 1e-4) return
     const k = 1 - Math.exp(-6 * dt)
-    g.position.x += (m.x - g.position.x) * k
-    g.position.z += (m.z - g.position.z) * k
-    g.rotation.y += (m.giro - g.rotation.y) * k
-    if (crecer.current >= 1) return
-    crecer.current = Math.min(1, crecer.current + dt / 0.6)
-    const p = 1 - (1 - crecer.current) ** 3
-    g.scale.set(1, Math.max(0.001, p), 1)
+    o.position.x += dx * k
+    o.position.z += dz * k
+    o.rotation.y += dg * k
+    if (crecer.current < 1) {
+      crecer.current = Math.min(1, crecer.current + dt / 0.6)
+      o.scale.set(1, Math.max(0.001, 1 - (1 - crecer.current) ** 3), 1)
+    }
   })
 
   return (
     <group ref={grupo} scale={[1, 0.001, 1]}>
-      <mesh geometry={piezas.lados} material={piezas.mLados} castShadow receiveShadow />
-      <mesh geometry={piezas.fondo} material={piezas.mFondo} receiveShadow />
-      <mesh geometry={piezas.baldas} material={piezas.mBaldas} castShadow receiveShadow />
-      {m.indice === 0 && seccion && <Cartel seccion={seccion} />}
+      <mesh geometry={g.lados} material={mat.lados} castShadow receiveShadow />
+      <mesh geometry={g.fondo} material={mat.fondo} receiveShadow />
+      <mesh geometry={g.baldas} material={mat.baldas} castShadow receiveShadow />
+      {m.indice === 0 && seccion && <Cartel seccion={seccion} alto={m.alto + 0.05} ancho={seccion.plataforma ? 0.55 : 0.8} />}
+      {m.indice === 0 && seccion?.plataforma && <Consola plataforma={seccion.plataforma} posicion={[0.28, m.alto + 0.05, 0]} />}
     </group>
   )
 }
 
-function Rotulo() {
-  const textura = useMemo(
-    () => texturaCartel([{ texto: 'libros.', peso: 600, tam: 120, color: '#f6efe3' }], 768, 200, '#3a2a1e'),
-    [],
-  )
+function RotuloPasillo({ texto, x }: { texto: string; x: number }) {
+  const textura = useMemo(() => texturaCartel([{ texto: `${texto}.`, peso: 600, tam: 110, color: '#f6efe3' }], 768, 200, '#3a2a1e'), [texto])
   return (
-    <group position={[0, SALA.alto - 0.55, ISLA_Z + 0.4]}>
-      {[-0.7, 0.7].map(x => (
-        <mesh key={x} position={[x, 0.32, 0]}>
-          <cylinderGeometry args={[0.006, 0.006, 0.5, 6]} />
+    <group position={[x, SALA.alto - 0.38, 0.55]}>
+      {[-0.45, 0.45].map(dx => (
+        <mesh key={dx} position={[dx, 0.24, 0]}>
+          <cylinderGeometry args={[0.006, 0.006, 0.3, 6]} />
           <meshStandardMaterial color="#2a2018" />
         </mesh>
       ))}
       <mesh>
-        <boxGeometry args={[1.9, 0.5, 0.03]} />
-        <meshStandardMaterial attach="material-0" color="#3a2a1e" />
-        <meshStandardMaterial attach="material-1" color="#3a2a1e" />
-        <meshStandardMaterial attach="material-2" color="#3a2a1e" />
-        <meshStandardMaterial attach="material-3" color="#3a2a1e" />
-        <meshStandardMaterial attach="material-4" map={textura} />
-        <meshStandardMaterial attach="material-5" color="#3a2a1e" />
+        <boxGeometry args={[1.2, 0.3, 0.03]} />
+        <meshStandardMaterial color="#3a2a1e" />
+      </mesh>
+      <mesh position={[0, 0, 0.016]}>
+        <planeGeometry args={[1.2, 0.3]} />
+        <meshStandardMaterial map={textura} />
       </mesh>
     </group>
   )
@@ -138,36 +158,37 @@ function Rotulo() {
 // Luz de las ventanas según la hora real: día claro, atardecer naranja, noche azul.
 function cieloAhora() {
   const h = new Date().getHours() + new Date().getMinutes() / 60
-  if (h >= 8 && h < 18) return { color: '#cfe6ff', fuerza: 2.2 }
-  if ((h >= 18 && h < 21) || (h >= 6 && h < 8)) return { color: '#ffb36b', fuerza: 1.8 }
-  return { color: '#3b4f7a', fuerza: 0.9 }
+  if (h >= 8 && h < 18) return '#cfe6ff'
+  if ((h >= 18 && h < 21) || (h >= 6 && h < 8)) return '#ffb36b'
+  return '#3b4f7a'
 }
 
 function Ventanas() {
   const cielo = useMemo(cieloAhora, [])
-  const x = SALA.ancho / 2 - 0.02
   return (
     <>
-      {[-2.6, 1.2].map(z => (
-        <group key={z} position={[x, 1.75, z]} rotation={[0, -Math.PI / 2, 0]}>
+      {[-3.5, -1.2].map(x => (
+        <group key={x} position={[x, 1.85, -SALA.fondo / 2 + 0.02]}>
           <mesh>
-            <planeGeometry args={[1.5, 1.4]} />
-            <meshBasicMaterial color={cielo.color} toneMapped={false} />
+            <planeGeometry args={[1.4, 1.2]} />
+            <meshBasicMaterial color={cielo} toneMapped={false} />
           </mesh>
-          {[[0, 0.72, 1.62, 0.08], [0, -0.72, 1.62, 0.1], [0.77, 0, 0.08, 1.5], [-0.77, 0, 0.08, 1.5], [0, 0, 0.04, 1.4], [0, 0, 1.5, 0.04]].map(([px, py, w, h], i) => (
-            <mesh key={i} position={[px, py, 0.03]}>
-              <boxGeometry args={[w, h, 0.06]} />
-              <meshStandardMaterial color="#f4ece0" roughness={0.6} />
-            </mesh>
-          ))}
+          <mesh position={[0, 0, 0.03]} geometry={MARCO} material={M_MARCO} />
         </group>
       ))}
     </>
   )
 }
+const MARCO = unirCajas([[0, 0.62, 1.52, 0.08], [0, -0.62, 1.52, 0.1], [0.72, 0, 0.08, 1.3], [-0.72, 0, 0.08, 1.3], [0, 0, 0.04, 1.2], [0, 0, 1.4, 0.04]]
+  .map(([px, py, w, h]) => ({ medidas: [w, h, 0.06] as [number, number, number], posicion: [px, py, 0] as [number, number, number] })))
+const M_MARCO = new MeshStandardMaterial({ color: '#f4ece0', roughness: 0.6 })
 
-export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Seccion[] }) {
+export function Sala({ muebles, secciones, manual }: { muebles: Mueble[]; secciones: Seccion[]; manual: boolean }) {
   const { ancho, fondo, alto } = SALA
+  const pasillos = pasillosDe(secciones)
+  const centros = pasillos.map((_, i) => centroPasillo(i, pasillos.length))
+  // Tres luces repartidas por la sala, sea cual sea su ancho.
+  const luces = [centros[0] ?? -3, centros[Math.floor(centros.length / 2)] ?? 0, centros[centros.length - 1] ?? 3]
   return (
     <>
       <color attach="background" args={['#2a221c']} />
@@ -185,17 +206,17 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
       />
-      {/* Seis lámparas a la vista, pero solo tres dan luz: cada luz encarece
-          todos los píxeles de la escena. */}
-      {[-3, 0, 3].flatMap(x => [-3.4, 1.2].map(z => (
+      {/* Lámparas sobre cada pasillo; solo tres dan luz de verdad: cada luz
+          encarece todos los píxeles de la escena. */}
+      {(centros.length ? centros : [-3.9, -1.3, 1.3, 3.9]).flatMap(x => [-3.3, -0.8].map(z => (
         <group key={`${x}${z}`} position={[x, alto - 0.05, z]}>
-          {z > 0 === (x === 0) && <pointLight intensity={2.2} distance={7} decay={1.5} color="#ffd9a0" />}
           <mesh>
             <cylinderGeometry args={[0.18, 0.24, 0.1, 12]} />
             <meshStandardMaterial color="#fff4dc" emissive="#ffd9a0" emissiveIntensity={1.2} />
           </mesh>
         </group>
       )))}
+      {[...new Set(luces)].map((x, i) => <pointLight key={x} position={[x, alto - 0.2, i % 2 ? -3.3 : -0.8]} intensity={2.4} distance={7.5} decay={1.5} color="#ffd9a0" />)}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[ancho, fondo]} />
         <meshStandardMaterial map={sueloMadera([ancho / 3, fondo / 3])} roughness={0.55} />
@@ -204,12 +225,7 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         <planeGeometry args={[2.4, 1.6]} />
         <meshStandardMaterial map={alfombra()} roughness={1} />
       </mesh>
-      {[-3, 0, 3].map(z => (
-        <mesh key={z} position={[0, alto - 0.09, z]} castShadow>
-          <boxGeometry args={[ancho, 0.18, 0.22]} />
-          <meshStandardMaterial map={madera('#6e4a2c')} roughness={0.8} />
-        </mesh>
-      ))}
+      <mesh geometry={vigas(ancho)} material={M_VIGA} />
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, alto, 0]}>
         <planeGeometry args={[ancho, fondo]} />
         <meshStandardMaterial color="#e9dfcf" roughness={1} />
@@ -225,19 +241,28 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
             <planeGeometry args={[w.a, alto]} />
             <meshStandardMaterial map={pared([w.a / 2, alto / 2])} roughness={1} />
           </mesh>
-          <mesh position={[0, 0.9 - alto / 2, 0.012]}>
-            <boxGeometry args={[w.a, 0.04, 0.02]} />
-            <meshStandardMaterial color={MADERA} roughness={0.8} />
-          </mesh>
-          <mesh position={[0, 0.06 - alto / 2, 0.01]}>
-            <boxGeometry args={[w.a, 0.12, 0.02]} />
-            <meshStandardMaterial color={MADERA} roughness={0.8} />
-          </mesh>
+          <mesh geometry={zocalo(w.a)} material={M_ZOCALO} position={[0, -alto / 2, 0.01]} />
         </group>
       ))}
-      <Rotulo />
+      {!manual && pasillos.map((p, i) => <RotuloPasillo key={p.nombre} texto={p.nombre} x={centros[i]} />)}
       <Ventanas />
       {muebles.map(m => <Estanteria key={m.id} m={m} seccion={secciones.find(s => s.id === m.seccion)} />)}
     </>
   )
+}
+
+const vigasCache = new Map<number, BufferGeometry>()
+function vigas(ancho: number) {
+  if (!vigasCache.has(ancho)) vigasCache.set(ancho, unirCajas([-3, 0, 3].map(z => ({ medidas: [ancho, 0.18, 0.22] as [number, number, number], posicion: [0, SALA.alto - 0.09, z] as [number, number, number] }))))
+  return vigasCache.get(ancho)!
+}
+const M_VIGA = new MeshStandardMaterial({ map: madera('#6e4a2c'), roughness: 0.8 })
+const M_ZOCALO = new MeshStandardMaterial({ color: MADERA, roughness: 0.8 })
+const zocalos = new Map<number, BufferGeometry>()
+function zocalo(ancho: number) {
+  if (!zocalos.has(ancho)) zocalos.set(ancho, unirCajas([
+    { medidas: [ancho, 0.12, 0.02], posicion: [0, 0.06, 0] },
+    { medidas: [ancho, 0.04, 0.02], posicion: [0, 0.9, 0] },
+  ]))
+  return zocalos.get(ancho)!
 }

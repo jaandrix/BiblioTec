@@ -2,7 +2,7 @@ import { advance, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { MathUtils, PerspectiveCamera, Raycaster, Vector2, Vector3 } from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
-import { alCarro, alternarGuiaSuelo, avisar, cambiarEstado, colocar, hechosHoy, leerEstado, MAX_CARRO } from '../estado'
+import { alCarro, alternarExpuesto, alternarGuiaSuelo, avisar, cambiarEstado, colocar, hechosHoy, leerEstado, MAX_CARRO } from '../estado'
 import { sonar } from '../sonido'
 import type { Caja } from '../tipos'
 import { cajaCarroAparcado, cartChoca } from './Carro'
@@ -52,7 +52,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     control.camara = camera as PerspectiveCamera
     if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros, pasar: (n = 30) => { for (let i = 0; i < n; i++) advance(performance.now() + i * 16) }, medir: (n = 20) => { gl.info.autoReset = false; gl.info.reset(); const t = performance.now(); for (let i = 0; i < n; i++) advance(performance.now() + i * 16); const ms = (performance.now() - t) / n; const r = { ms: +ms.toFixed(1), llamadas: Math.round(gl.info.render.calls / n), triangulos: Math.round(gl.info.render.triangles / n), texturas: gl.info.memory.textures, programas: gl.info.programs?.length }; gl.info.autoReset = true; return r } } })
 
-    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null, verRevision: false })
+    const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null, verRevision: false, editorMapa: false })
     const alSalir = () => {
       if (soltadoPropio.activo) {
         soltadoPropio.activo = false
@@ -66,7 +66,11 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     mando.addEventListener('unlock', alSalir)
 
     const cogerAlCarro = (ids: string[]) => {
-      if (!leerEstado().llevoCarro) { sonar.error(); avisar('ve a por el carro (c) para llevar libros.'); return }
+      if (!leerEstado().llevoCarro) {
+        // Si el carro está a mano, se coge solo.
+        if (distanciaAlCarro() < 3.5) cambiarEstado({ llevoCarro: true })
+        else { sonar.error(); avisar('ve a por el carro (c junto a él) para llevar cosas.'); return }
+      }
       const libres = MAX_CARRO - leerEstado().coleccion.carro.length
       if (libres <= 0) { sonar.error(); avisar('el carro está lleno. coloca algo primero.'); return }
       alCarro(ids)
@@ -96,6 +100,12 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       if (abierto) {
         if (e.code === 'KeyF' || e.code === 'KeyR') giroInspeccion.volteo += Math.PI
         if (e.code === 'KeyE' || e.code === 'KeyQ') cambiarEstado({ abierto: null })
+        if (e.code === 'KeyX' && huecoDe(abierto)) {
+          const expuesto = !(leerEstado().coleccion.expuestos ?? []).includes(abierto)
+          cambiarEstado({ abierto: null })
+          alternarExpuesto(abierto)
+          avisar(expuesto ? 'en exposición: se verá de frente en su estantería.' : 'vuelve a su sitio de lomo.')
+        }
         if (e.code === 'KeyP' && !abierto.startsWith('carta_') && !abierto.startsWith('sellado_')) { cambiarEstado({ editarPortada: abierto }); soltar() }
         if (e.code === 'KeyB' && abierto.startsWith('carta_')) { cambiarEstado({ guardarEnCaja: abierto, abierto: null }); soltar() }
         return
@@ -107,6 +117,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       if (e.code === 'KeyC') alternarCarro()
       if (e.code === 'KeyE') accion()
       if (e.code === 'KeyV') vaciarCerca()
+      if (e.code === 'KeyM') { cambiarEstado({ editorMapa: true, apuntado: null }); soltar() }
       if (e.code === 'KeyN') {
         if (!leerEstado().revision.length) { avisar('nada nuevo de bitácora.'); return }
         cambiarEstado({ verRevision: true })
@@ -216,7 +227,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
   }, [camera, gl])
 
   useFrame((_, dt) => {
-    const { dentro, abierto, terminal, menuOrden, config, llevoCarro, cajaAbierta, guardarEnCaja, verRevision } = leerEstado()
+    const { dentro, abierto, terminal, menuOrden, config, llevoCarro, cajaAbierta, guardarEnCaja, verRevision, editorMapa } = leerEstado()
     const mando = control.mando
     const cam = camera as PerspectiveCamera
     if (mando) {
@@ -233,7 +244,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       cam.updateProjectionMatrix()
     }
 
-    if (!dentro || abierto || terminal || menuOrden || cajaAbierta || guardarEnCaja || verRevision) return
+    if (!dentro || abierto || terminal || menuOrden || cajaAbierta || guardarEnCaja || verRevision || editorMapa) return
     const t = teclas.current
     const avance = (t.has('KeyW') || t.has('ArrowUp') ? 1 : 0) - (t.has('KeyS') || t.has('ArrowDown') ? 1 : 0)
     const giro = (t.has('KeyD') || t.has('ArrowRight') ? 1 : 0) - (t.has('KeyA') || t.has('ArrowLeft') ? 1 : 0)

@@ -19,11 +19,22 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 3.5 | Pulido: inspección nueva, pausa y ajustes, zoom, dejar el carro, brazos, cambiar portadas, mejor aspecto | hecha |
 | 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado, vitrina de graduadas | hecha (con cartas de ejemplo) |
 | 5 | Cuentas, enlace con Bitácora, guardar en la nube | hecha |
-| 6 | Películas, series y videojuegos (hecho); consolas, créditos en el juego y Spotify (pendiente) | a medias |
+| 6 | Películas, series y videojuegos, pasillos, consolas, editor de mapa, exposición, cajas que se abren, Libib (hecho); créditos en el juego y Spotify (pendiente) | casi |
 
 ## Rendimiento (24-11)
 
 Iba lento porque cada fotograma pedía unas 3.000 llamadas de dibujo a la gráfica. Ahora son menos de 300: cada libro es una sola pieza con una sola textura, cada carta dos caras, sin cristal con transmisión, sombras calculadas solo cuando cambian los muebles, tres luces en vez de ocho y el posprocesado solo en calidad alta. Hay tres niveles de calidad (alta, media y baja; media por defecto) y, si va a menos de 28 imágenes por segundo, baja sola un nivel y avisa (se puede desactivar en la pausa).
+
+## Novedades (24-11, tarde)
+
+- **Pasillos:** un pasillo por tipo (libros, películas, series, videojuegos), con su rótulo; si un tipo no cabe en uno, ocupa varios y la sala se ensancha. Los videojuegos van por consola, con la consola de adorno encima de su estantería.
+- **Editor de mapa (`m` o `mapa` en el ordenador):** vista desde arriba para arrastrar, girar, añadir, duplicar y borrar estanterías, cambiar su color, alto y número de baldas, y elegir qué sección guarda cada una. «volver a lo automático» deshace.
+- **Exposición (`x` con algo en la mano):** se queda de frente en su estantería, enseñando la portada.
+- **Cajas de juego y película realistas:** plástico del color de cada consola o formato, cabecera con su nombre, lomo con título y recuadro de edad. Al cogerlas se abren: manual con la portada en la tapa y, en la bandeja, disco plateado o cartucho (Switch, DS, 3DS).
+- **Carro y brazos** con más detalle (puños de goma, manos, ruedas con buje). Se empieza sin carro: espera junto a la mesa y se coge solo al hacer clic en algo de la mesa; `c` lo deja cuando quieras.
+- **Importar de Libib (`importar libib` en el ordenador):** lee el CSV que exporta Libib (libros, películas, series y juegos; deduce la consola, como Xbox 360, o te la pregunta).
+- **Rendimiento con bibliotecas grandes:** lo lejano se dibuja todo junto en una sola llamada; solo lo que tienes a unos 2 m lleva textura detallada, y las texturas se pintan poco a poco. Con 667 objetos: unas 215 llamadas de dibujo y 23 texturas.
+- **Zona Pokémon:** quitada por ahora (el código sigue en el repositorio).
 
 ## Cuenta y Bitácora
 
