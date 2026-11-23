@@ -34,4 +34,6 @@ export const sonar = {
   coger: () => tono(520, 0, 0.07, 0.08),
   colocar: () => { tono(330, 0, 0.08); tono(660, 0.07, 0.12, 0.09) },
   error: () => tono(180, 0, 0.14, 0.08),
+  sacar: () => { tono(700, 0, 0.05, 0.05); tono(420, 0.04, 0.08, 0.05) },
+  tecla: () => tono(1800 + Math.random() * 400, 0, 0.025, 0.03),
 }

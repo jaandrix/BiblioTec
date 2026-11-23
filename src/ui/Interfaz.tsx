@@ -35,7 +35,7 @@ function Ficha({ libro }: { libro: Libro }) {
         <li><kbd>f</kbd> darle la vuelta</li>
         <li><kbd>rueda</kbd> acercar o alejar</li>
         <li><kbd>p</kbd> cambiar la portada</li>
-        <li><kbd>clic</kbd> devolverlo a la balda</li>
+        <li><kbd>clic dcho.</kbd> devolverlo a la balda</li>
       </ul>
     </aside>
   )
@@ -80,7 +80,9 @@ const CONTROLES: [string, string][] = [
   ['w a s d', 'moverse (mayús corre)'],
   ['ratón', 'mirar'],
   ['rueda', 'acercar la vista'],
-  ['clic', 'sacar un libro, coger de la mesa, colocar en un hueco, usar el ordenador'],
+  ['clic / e', 'sacar un libro, coger de la mesa, colocar en un hueco, usar el ordenador'],
+  ['clic dcho.', 'devolver lo que tienes en la mano'],
+  ['v', 'vaciar el carro en las estanterías de alrededor'],
   ['t', 'todo lo de la mesa al carro'],
   ['c', 'dejar o coger el carro'],
   ['o', 'ordenar la estantería que miras'],
@@ -96,6 +98,13 @@ function Controles() {
     </ul>
   )
 }
+
+const BASICOS: [string, string][] = [
+  ['w a s d', 'moverse'],
+  ['ratón', 'mirar'],
+  ['clic', 'usar lo que miras'],
+  ['esc', 'pausa, con todos los controles'],
+]
 
 function Portada() {
   const cuenta = useEstado(e => e.cuenta)
@@ -117,7 +126,10 @@ function Portada() {
             </>
           )}
         </div>
-        <Controles />
+        <ul className="lista-controles">
+          {BASICOS.map(([k, t]) => <li key={k}><kbd>{k}</kbd><span>{t}</span></li>)}
+          <li className="nota-controles">el resto se explica al mirar cada cosa.</li>
+        </ul>
       </div>
     </div>
   )
@@ -146,16 +158,24 @@ function Pausa() {
         {pestana === 'controles' ? <Controles /> : pestana === 'cuenta' ? <AjustesCuenta /> : (
           <div className="ajustes">
             <label>
+              <span>campo de visión.</span>
+              <input type="range" min={50} max={85} step={1} value={config.fov} onChange={e => cambiarAjuste('fov', Number(e.target.value))} />
+            </label>
+            <label>
               <span>sensibilidad del ratón.</span>
               <input type="range" min={0.3} max={2} step={0.05} value={config.sensibilidad} onChange={e => cambiarAjuste('sensibilidad', Number(e.target.value))} />
             </label>
             <div className="ajuste">
               <span>calidad gráfica.</span>
               <div className="pestanas">
-                {(['alta', 'baja'] as const).map(c => (
-                  <button key={c} className={config.calidad === c ? 'activa' : ''} onClick={() => cambiarAjuste('calidad', c)}>{c}.</button>
+                {(['alta', 'media', 'baja'] as const).map(c => (
+                  <button key={c} className={config.calidad === c ? 'activa' : ''} onClick={() => { cambiarAjuste('calidad', c); cambiarAjuste('calidadAuto', false) }}>{c}.</button>
                 ))}
               </div>
+            </div>
+            <div className="ajuste">
+              <span>bajar la calidad sola si va lento.</span>
+              <button className={config.calidadAuto ? 'activa' : ''} onClick={() => cambiarAjuste('calidadAuto', !config.calidadAuto)}>{config.calidadAuto ? 'sí.' : 'no.'}</button>
             </div>
             <div className="ajuste">
               <span>sonido.</span>
@@ -203,6 +223,8 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
     return () => document.removeEventListener('pointerlockerror', fallo)
   }, [])
 
+  const titulo = apuntado ? libros.find(l => l.id === apuntado) ?? cartas.find(c => c.id === apuntado) ?? sellados.find(s => s.id === apuntado) : null
+  const rotulo = !titulo ? null : 'autor' in titulo ? `${titulo.titulo}, ${titulo.autor}${titulo.anio ? ` (${titulo.anio})` : ''}` : 'rareza' in titulo ? `${titulo.nombre}, ${titulo.set}` : titulo.nombre
   const pista = !apuntado ? null
     : apuntado === 'terminal' ? <><kbd>clic</kbd> usar el ordenador</>
     : apuntado === 'carro' ? <><kbd>clic</kbd> coger el carro</>
@@ -211,14 +233,14 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
     : apuntado.startsWith('sellado_') ? <><kbd>clic</kbd> mirar</>
     : apuntado.startsWith('hueco:') ? <><kbd>clic</kbd> colocar aquí</>
     : pendientes.includes(apuntado) ? <><kbd>clic</kbd> al carro <kbd>t</kbd> todos al carro</>
-    : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado.</>
+    : carro.includes(apuntado) ? <>en el carro. busca su hueco iluminado (v vacía el carro aquí).</>
     : <><kbd>clic</kbd> sacar <kbd>o</kbd> ordenar esta estantería</>
 
   const sinNada = !dentro && !terminal && !menuOrden && !pausa && !libroEditar && !cajaAbierta && !cartaGuardar && !verRevision
   return (
     <>
       {dentro && !mirando && <div className={`mirilla ${apuntado ? 'activa' : ''}`} />}
-      {dentro && !mirando && pista && <div className="pista-mirilla">{pista}</div>}
+      {dentro && !mirando && pista && <div className="pista-mirilla">{rotulo && <b>{rotulo}</b>}<span>{pista}</span></div>}
       {dentro && !mirando && <Marcador />}
       <Aviso />
       {libro && dentro && <Ficha libro={libro} />}

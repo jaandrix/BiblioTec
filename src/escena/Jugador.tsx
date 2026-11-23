@@ -18,7 +18,7 @@ const FOV = 62
 const FOV_MIN = 22
 const CARRO_CERCA = 3.5
 
-export const zoom = { objetivo: FOV }
+export const zoom = { objetivo: FOV, base: FOV }
 
 function choca(x: number, z: number, cajas: Caja[]) {
   const lim = { x: SALA.ancho / 2 - RADIO, z: SALA.fondo / 2 - RADIO }
@@ -50,7 +50,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     const mando = new PointerLockControls(camera, gl.domElement)
     control.mando = mando
     control.camara = camera as PerspectiveCamera
-    if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros, pasar: (n = 30) => { for (let i = 0; i < n; i++) advance(performance.now() + i * 16) } } })
+    if (import.meta.env.DEV) Object.assign(window, { __bibliotec: { control, cambiarEstado, leerEstado, mallasLibros, pasar: (n = 30) => { for (let i = 0; i < n; i++) advance(performance.now() + i * 16) }, medir: (n = 20) => { gl.info.autoReset = false; gl.info.reset(); const t = performance.now(); for (let i = 0; i < n; i++) advance(performance.now() + i * 16); const ms = (performance.now() - t) / n; const r = { ms: +ms.toFixed(1), llamadas: Math.round(gl.info.render.calls / n), triangulos: Math.round(gl.info.render.triangles / n), texturas: gl.info.memory.textures, programas: gl.info.programs?.length }; gl.info.autoReset = true; return r } } })
 
     const alEntrar = () => cambiarEstado({ dentro: true, terminal: false, menuOrden: null, pausa: false, inicio: false, editarPortada: null, cajaAbierta: null, guardarEnCaja: null, verRevision: false })
     const alSalir = () => {
@@ -94,7 +94,8 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       if (!mando.isLocked) return
       const { apuntado, coleccion, abierto } = leerEstado()
       if (abierto) {
-        if (e.code === 'KeyF') giroInspeccion.volteo += Math.PI
+        if (e.code === 'KeyF' || e.code === 'KeyR') giroInspeccion.volteo += Math.PI
+        if (e.code === 'KeyE' || e.code === 'KeyQ') cambiarEstado({ abierto: null })
         if (e.code === 'KeyP' && !abierto.startsWith('carta_') && !abierto.startsWith('sellado_')) { cambiarEstado({ editarPortada: abierto }); soltar() }
         if (e.code === 'KeyB' && abierto.startsWith('carta_')) { cambiarEstado({ guardarEnCaja: abierto, abierto: null }); soltar() }
         return
@@ -104,6 +105,8 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
         avisar(leerEstado().config.guiaSuelo ? 'flechas del suelo encendidas.' : 'flechas del suelo apagadas.')
       }
       if (e.code === 'KeyC') alternarCarro()
+      if (e.code === 'KeyE') accion()
+      if (e.code === 'KeyV') vaciarCerca()
       if (e.code === 'KeyN') {
         if (!leerEstado().revision.length) { avisar('nada nuevo de bitácora.'); return }
         cambiarEstado({ verRevision: true })
@@ -125,8 +128,31 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     const arriba = (e: KeyboardEvent) => teclas.current.delete(e.code)
     const perderFoco = () => teclas.current.clear()
 
+    // Vaciar el carro aquí: los libros cuyo hueco está a menos de 3 m vuelan a
+    // su sitio uno tras otro (como reponer una balda en un simulador de tienda).
+    const vaciarCerca = () => {
+      const { coleccion, llevoCarro } = leerEstado()
+      const cam = control.camara
+      if (!cam || !coleccion.carro.length) { avisar('el carro está vacío.'); return }
+      if (!llevoCarro && distanciaAlCarro() > CARRO_CERCA) { sonar.error(); avisar('el carro está lejos.'); return }
+      const cerca = coleccion.carro.filter(id => {
+        const h = huecoDe(id)
+        return h && Math.hypot(h.posicion[0] - cam.position.x, h.posicion[2] - cam.position.z) < 3
+      })
+      if (!cerca.length) { sonar.error(); avisar('ningún libro del carro va en las estanterías de aquí. sigue las flechas.'); return }
+      cerca.forEach((id, i) => setTimeout(() => { colocar([id]); sonar.colocar() }, i * 160))
+      setTimeout(() => avisar(`${cerca.length} ${cerca.length === 1 ? 'libro colocado' : 'libros colocados'}. llevas ${hechosHoy()} hoy.`), cerca.length * 160)
+    }
+
     const clic = (e: MouseEvent) => {
-      if (e.button !== 0 || !mando.isLocked) return
+      if (!mando.isLocked) return
+      // Clic derecho devuelve lo que tienes en la mano, como en los simuladores.
+      if (e.button === 2) { if (leerEstado().abierto) cambiarEstado({ abierto: null }); return }
+      if (e.button !== 0) return
+      accion()
+    }
+
+    function accion() {
       const { apuntado, coleccion, abierto } = leerEstado()
       if (abierto) { cambiarEstado({ abierto: null }); return }
       if (!apuntado) return
@@ -147,8 +173,10 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       giroInspeccion.y = 0
       giroInspeccion.volteo = 0
       giroInspeccion.distancia = 0.42
+      sonar.sacar()
       cambiarEstado({ abierto: apuntado, apuntado: null })
     }
+    const sinMenu = (e: MouseEvent) => { if (mando.isLocked) e.preventDefault() }
 
     // Con el libro en la mano el ratón sigue capturado: moverlo gira el libro
     // (como coger un objeto en un juego) en vez de girar la cabeza.
@@ -162,13 +190,14 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     const rueda = (e: WheelEvent) => {
       if (!mando.isLocked) return
       if (leerEstado().abierto) giroInspeccion.distancia = MathUtils.clamp(giroInspeccion.distancia + e.deltaY * 0.0006, 0.24, 0.8)
-      else zoom.objetivo = MathUtils.clamp(zoom.objetivo + e.deltaY * 0.03, FOV_MIN, FOV)
+      else zoom.objetivo = MathUtils.clamp(zoom.objetivo + e.deltaY * 0.03, FOV_MIN, leerEstado().config.fov)
     }
 
     window.addEventListener('keydown', abajo)
     window.addEventListener('keyup', arriba)
     window.addEventListener('blur', perderFoco)
     document.addEventListener('mousedown', clic)
+    document.addEventListener('contextmenu', sinMenu)
     document.addEventListener('mousemove', mover)
     window.addEventListener('wheel', rueda, { passive: true })
     return () => {
@@ -180,6 +209,7 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
       window.removeEventListener('keyup', arriba)
       window.removeEventListener('blur', perderFoco)
       document.removeEventListener('mousedown', clic)
+      document.removeEventListener('contextmenu', sinMenu)
       document.removeEventListener('mousemove', mover)
       window.removeEventListener('wheel', rueda)
     }
@@ -195,7 +225,9 @@ export function Jugador({ cajas }: { cajas: Caja[] }) {
     }
     giroInspeccion.y += (giroInspeccion.volteo - giroInspeccion.y) * (1 - Math.exp(-12 * dt))
 
-    const fov = abierto || terminal ? FOV : zoom.objetivo
+    // El zoom es relativo al campo de visión elegido en los ajustes.
+    if (zoom.objetivo > config.fov || zoom.base !== config.fov) { zoom.objetivo = Math.min(zoom.objetivo, config.fov); if (zoom.base !== config.fov) zoom.objetivo = config.fov; zoom.base = config.fov }
+    const fov = abierto || terminal ? config.fov : zoom.objetivo
     if (Math.abs(cam.fov - fov) > 0.01) {
       cam.fov += (fov - cam.fov) * (1 - Math.exp(-10 * dt))
       cam.updateProjectionMatrix()

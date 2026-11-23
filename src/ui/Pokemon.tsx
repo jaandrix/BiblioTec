@@ -49,7 +49,7 @@ export function FichaCarta({ carta }: { carta: Carta }) {
         <li><kbd>f</kbd> darle la vuelta</li>
         <li><kbd>rueda</kbd> acercar o alejar</li>
         {!carta.graduada && <li><kbd>b</kbd> guardar en una caja</li>}
-        <li><kbd>clic</kbd> devolverla</li>
+        <li><kbd>clic dcho.</kbd> devolverla</li>
       </ul>
     </aside>
   )
@@ -72,7 +72,7 @@ export function FichaSellado({ sellado }: { sellado: Sellado }) {
       <ul className="controles-ficha">
         <li><kbd>ratón</kbd> girarlo</li>
         <li><kbd>f</kbd> darle la vuelta</li>
-        <li><kbd>clic</kbd> devolverlo</li>
+        <li><kbd>clic dcho.</kbd> devolverlo</li>
       </ul>
     </aside>
   )

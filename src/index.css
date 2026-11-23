@@ -240,3 +240,7 @@ kbd {
 .item-revision small { color: var(--tinta-suave); font-size: 12px; }
 .item-revision .botones { display: flex; gap: 6px; flex-shrink: 0; }
 .item-revision button.si { background: var(--acento); color: #241c16; font-weight: 600; }
+
+.pista-mirilla { display: grid; justify-items: center; gap: 4px; }
+.pista-mirilla b { font-weight: 600; font-size: 15px; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; }
+.nota-controles { display: block !important; color: var(--tinta-suave); font-size: 12px; margin-top: 6px; }

@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { CanvasTexture, Group, Material, MeshPhysicalMaterial, MeshStandardMaterial, Quaternion, SRGBColorSpace, TextureLoader, Vector3 } from 'three'
+import { CanvasTexture, DoubleSide, Group, MeshPhysicalMaterial, MeshStandardMaterial, PlaneGeometry, Quaternion, SRGBColorSpace, TextureLoader, Vector3 } from 'three'
 import { useEstado } from '../../estado'
 import type { Carta as TCarta } from '../../tipos'
 import { useInspeccion } from '../inspeccion'
@@ -9,6 +9,8 @@ import { mallasLibros } from '../registro'
 export const CARTA = { ancho: 0.063, alto: 0.088 }
 const cargador = new TextureLoader().setCrossOrigin('anonymous')
 const FRENTE = new Quaternion()
+const PLANO = new PlaneGeometry(0.063, 0.088)
+let DORSO: MeshStandardMaterial
 
 let dorso: CanvasTexture | null = null
 // Dorso propio (no el oficial): azul con un óvalo, para que de espaldas se
@@ -74,21 +76,16 @@ export function Carta({ carta, sitio }: { carta: TCarta; sitio: PosicionCarta })
   const apuntado = useEstado(e => e.apuntado === carta.id)
   const abierto = useEstado(e => e.abierto === carta.id)
   const losa = !!carta.graduada
+  DORSO ??= new MeshStandardMaterial({ map: texturaDorso(), roughness: 0.6 })
   const inspeccionar = useInspeccion(carta.id, grupo, FRENTE, losa ? 0.62 : 0.42)
 
-  const materiales = useMemo<Material[]>(() => {
-    // Las cartas brillantes tienen iridiscencia: al girarlas, el brillo cambia
-    // de color como una holo de verdad.
-    const frente = carta.holo
-      ? new MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.32, metalness: 0.25, iridescence: 0.9, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 900], clearcoat: 0.6 })
-      : new MeshStandardMaterial({ color: '#ffffff', roughness: 0.55 })
-    const canto = new MeshStandardMaterial({ color: '#e9e2d0', roughness: 0.8 })
-    const atras = new MeshStandardMaterial({ map: texturaDorso(), roughness: 0.6 })
-    return [canto, canto, canto, canto, frente, atras]
-  }, [carta])
+  // Dos caras planas (frente y dorso): dos llamadas de dibujo por carta. Las
+  // brillantes tienen iridiscencia: al girarlas, el brillo cambia de color.
+  const frente = useMemo(() => (carta.holo
+    ? new MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.32, metalness: 0.25, iridescence: 0.9, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 900] })
+    : new MeshStandardMaterial({ color: '#ffffff', roughness: 0.55 })), [carta])
 
   useEffect(() => {
-    const frente = materiales[4] as MeshStandardMaterial
     cargador.load(`${carta.imagen}/${abierto ? 'high' : 'low'}.webp`, tex => {
       tex.colorSpace = SRGBColorSpace
       tex.anisotropy = 8
@@ -96,7 +93,7 @@ export function Carta({ carta, sitio }: { carta: TCarta; sitio: PosicionCarta })
       frente.map = tex
       frente.needsUpdate = true
     })
-  }, [carta, materiales, abierto])
+  }, [carta, frente, abierto])
 
   const etiqueta = useMemo(() => (losa ? texturaEtiqueta(carta) : null), [carta, losa])
 
@@ -126,14 +123,13 @@ export function Carta({ carta, sitio }: { carta: TCarta; sitio: PosicionCarta })
 
   return (
     <group ref={grupo}>
-      <mesh material={materiales} castShadow>
-        <boxGeometry args={[CARTA.ancho, CARTA.alto, 0.0006]} />
-      </mesh>
+      <mesh geometry={PLANO} material={frente} position={[0, 0, 0.0003]} />
+      <mesh geometry={PLANO} material={DORSO} position={[0, 0, -0.0003]} rotation={[0, Math.PI, 0]} />
       {losa && (
         <>
           <mesh position={[0, 0.012, 0]}>
             <boxGeometry args={[CARTA.ancho + 0.016, CARTA.alto + 0.05, 0.008]} />
-            <meshPhysicalMaterial color="#ffffff" transmission={0.92} roughness={0.05} thickness={0.008} transparent opacity={0.35} />
+            <meshStandardMaterial color="#eef6ff" roughness={0.1} metalness={0.1} transparent opacity={0.28} depthWrite={false} side={DoubleSide} />
           </mesh>
           <mesh position={[0, CARTA.alto / 2 + 0.02, 0.0045]}>
             <planeGeometry args={[CARTA.ancho + 0.008, 0.017]} />

@@ -192,7 +192,7 @@ export function ZonaPokemon({ cartas, sellados }: { cartas: TCarta[]; sellados: 
           <group key={c.id}>
             <mesh position={[sitio.posicion[0] - 0.012, sitio.posicion[1] - CARTA.alto / 2 + 0.004, sitio.posicion[2]]}>
               <boxGeometry args={[0.03, 0.008, 0.05]} />
-              <meshPhysicalMaterial color="#ffffff" transmission={0.9} roughness={0.1} transparent opacity={0.5} />
+              <meshStandardMaterial color="#f4f8ff" roughness={0.15} transparent opacity={0.45} depthWrite={false} />
             </mesh>
             <Carta carta={c} sitio={sitio} />
           </group>
@@ -219,7 +219,7 @@ export function ZonaPokemon({ cartas, sellados }: { cartas: TCarta[]; sellados: 
         </mesh>
         <mesh position={[0, VITRINA.alto - 0.06, 0]}>
           <boxGeometry args={[VITRINA.ancho, 0.12, VITRINA.fondo]} />
-          <meshPhysicalMaterial color="#e8f4ff" transmission={0.95} roughness={0.03} thickness={0.01} transparent opacity={0.25} />
+          <meshStandardMaterial color="#e8f4ff" roughness={0.05} metalness={0.2} transparent opacity={0.18} depthWrite={false} />
         </mesh>
         <mesh position={[0, 0.04, VITRINA.fondo / 2 + 0.002]}>
           <boxGeometry args={[VITRINA.ancho, 0.08, 0.005]} />

@@ -17,6 +17,7 @@ import { Libro, type Destino } from './escena/Libro'
 import { control } from './escena/registro'
 import { Sala } from './escena/Sala'
 import { CAJA_TERMINAL, Terminal3D } from './escena/Terminal3D'
+import { CalidadAutomatica, SombrasEstaticas } from './escena/Rendimiento'
 import { useEstado } from './estado'
 import { colorDeLibro } from './libros/color'
 import type { Carta, Libro as TLibro, Sellado } from './tipos'
@@ -29,6 +30,7 @@ const SELLADOS = pokemonDemo.sellados as Sellado[]
 export default function App() {
   const config = useEstado(e => e.config)
   const alta = config.calidad === 'alta'
+  const dpr = config.calidad === 'alta' ? 1.5 : config.calidad === 'media' ? 1.25 : 1
   const coleccion = useEstado(e => e.coleccion)
   const todos = useMemo(() => {
     const ejemplo = config.ejemplos ? LIBROS : []
@@ -66,7 +68,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ fov: 62, near: 0.05, far: 60 }} dpr={alta ? [1, 2] : 1}>
+      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ fov: 62, near: 0.05, far: 60 }} dpr={[1, dpr]}>
         {/* Reflejos suaves de luz cálida sin descargar ningún mapa de entorno. */}
         <Environment resolution={128} frames={1}>
           <Lightformer intensity={1.2} color="#ffe6c4" position={[0, 4, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 10, 1]} />
@@ -84,9 +86,11 @@ export default function App() {
         <Terminal3D libros={biblioteca.huecos.length} estanterias={biblioteca.secciones.length} />
         <Guia />
         <Jugador cajas={cajas} />
+        <SombrasEstaticas version={biblioteca} />
+        <CalidadAutomatica />
         {alta && (
-          <EffectComposer multisampling={4}>
-            <N8AO aoRadius={0.6} intensity={2.2} distanceFalloff={0.6} halfRes />
+          <EffectComposer multisampling={0}>
+            <N8AO aoRadius={0.6} intensity={2.2} distanceFalloff={0.6} halfRes quality="performance" />
             <Bloom luminanceThreshold={0.95} intensity={0.45} mipmapBlur />
             <Vignette offset={0.3} darkness={0.45} />
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />

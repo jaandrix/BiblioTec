@@ -79,15 +79,15 @@ function Brazo({ lado }: { lado: 1 | -1 }) {
 
   return (
     <>
-      <mesh ref={brazo} castShadow>
+      <mesh ref={brazo}>
         <cylinderGeometry args={[0.05, 0.045, 1, 10]} />
         <meshStandardMaterial color={MANGA} roughness={0.85} />
       </mesh>
-      <mesh ref={antebrazo} castShadow>
+      <mesh ref={antebrazo}>
         <cylinderGeometry args={[0.042, 0.036, 1, 10]} />
         <meshStandardMaterial color={MANGA} roughness={0.85} />
       </mesh>
-      <mesh ref={mano} castShadow>
+      <mesh ref={mano}>
         <boxGeometry args={[0.075, 0.06, 0.1]} />
         <meshStandardMaterial color={PIEL} roughness={0.7} />
       </mesh>
@@ -143,31 +143,31 @@ export function Carro({ cajas }: { cajas: Caja[] }) {
   const postes = [-1, 1].flatMap(sx => [-1, 1].map(sz => [sx * (ANCHO / 2 - 0.02), sz * (FONDO / 2 - 0.02)] as const))
   return (
     <group ref={grupo}>
-      <mesh position={[0, SUELO_CESTA - 0.015, 0]} castShadow receiveShadow>
+      <mesh position={[0, SUELO_CESTA - 0.015, 0]} receiveShadow>
         <boxGeometry args={[ANCHO, 0.03, FONDO]} />
         <meshStandardMaterial color={MADERA} roughness={0.8} />
       </mesh>
-      <mesh position={[0, 0.16, 0]} castShadow>
+      <mesh position={[0, 0.16, 0]}>
         <boxGeometry args={[ANCHO, 0.025, FONDO]} />
         <meshStandardMaterial color={MADERA} roughness={0.8} />
       </mesh>
       {[-1, 1].map(s => (
-        <mesh key={`l${s}`} position={[s * (ANCHO / 2 - 0.01), SUELO_CESTA + ALTO_CESTA / 2 - 0.03, 0]} castShadow>
+        <mesh key={`l${s}`} position={[s * (ANCHO / 2 - 0.01), SUELO_CESTA + ALTO_CESTA / 2 - 0.03, 0]}>
           <boxGeometry args={[0.02, ALTO_CESTA, FONDO]} />
           <meshStandardMaterial color={MADERA} roughness={0.8} />
         </mesh>
       ))}
-      <mesh position={[0, SUELO_CESTA + 0.05, -FONDO / 2 + 0.01]} castShadow>
+      <mesh position={[0, SUELO_CESTA + 0.05, -FONDO / 2 + 0.01]}>
         <boxGeometry args={[ANCHO, 0.1, 0.02]} />
         <meshStandardMaterial color={MADERA} roughness={0.8} />
       </mesh>
       {postes.map(([x, z]) => (
         <group key={`${x}${z}`}>
-          <mesh position={[x, (SUELO_CESTA + 0.04) / 2, z]} castShadow>
+          <mesh position={[x, (SUELO_CESTA + 0.04) / 2, z]}>
             <cylinderGeometry args={[0.012, 0.012, SUELO_CESTA - 0.04, 8]} />
             <meshStandardMaterial color={METAL} metalness={0.5} roughness={0.5} />
           </mesh>
-          <mesh position={[x, 0.04, z]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <mesh position={[x, 0.04, z]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.04, 0.04, 0.03, 12]} />
             <meshStandardMaterial color="#1e1c1a" roughness={0.9} />
           </mesh>

@@ -7,7 +7,9 @@ export interface Config {
   extra: Record<string, number>
   guiaSuelo: boolean
   sensibilidad: number
-  calidad: 'alta' | 'baja'
+  calidad: 'alta' | 'media' | 'baja'
+  calidadAuto: boolean
+  fov: number
   sonido: boolean
   ejemplos: boolean
 }
@@ -70,7 +72,8 @@ interface Estado {
 }
 
 export const MAX_CARRO = 20
-const CLAVE_CONFIG = 'bibliotec-config-v1'
+// v2: la calidad por defecto pasa a media (la alta iba lenta en muchos equipos).
+const CLAVE_CONFIG = 'bibliotec-config-v2'
 const CLAVE_COLECCION = 'bibliotec-coleccion-v1'
 const CLAVE_POKEMON = 'bibliotec-pokemon-v1'
 const CLAVE_ENLACE = 'bibliotec-enlace-v1'
@@ -126,7 +129,7 @@ let estado: Estado = {
   verRevision: false,
   cuenta: null,
   aviso: null,
-  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'alta', sonido: true, ejemplos: true }),
+  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'media', calidadAuto: true, fov: 62, sonido: true, ejemplos: true }),
   coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {} }),
 }
 const oyentes = new Set<() => void>()

@@ -1,9 +1,9 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Euler, Mesh, MeshStandardMaterial, Quaternion, SRGBColorSpace, TextureLoader, Vector3 } from 'three'
+import { Euler, Mesh, MeshStandardMaterial, Quaternion, Vector3 } from 'three'
 import { cambiarEstado, leerEstado, useEstado } from '../estado'
 import { colorDeLibro, colorDominante } from '../libros/color'
-import { texturaLomo } from '../libros/lomo'
+import { cajaLibro, texturaLibro } from '../libros/lomo'
 import type { Hueco, Libro as TLibro } from '../tipos'
 import { huecoCarro } from './Carro'
 import { altoLibro, grosorLibro, PROFUNDIDAD_LIBRO } from './distribucion'
@@ -14,13 +14,11 @@ export type Destino =
   | { tipo: 'carro'; indice: number }
   | { tipo: 'mesa'; posicion: [number, number, number]; giro: number }
 
-const PAPEL = '#efe6d0'
 const SACAR = 0.13
 const ARRIBA = new Vector3(0, 1, 0)
 const DELANTE = new Vector3(0, 0, 1)
 const GIRO_PORTADA = new Quaternion().setFromAxisAngle(ARRIBA, -Math.PI / 2)
 const TUMBADO = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2)
-const cargador = new TextureLoader().setCrossOrigin('anonymous')
 
 const curva = (t: number) => 1 - (1 - t) ** 3
 const curvaSuave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
@@ -39,50 +37,39 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
   const abierto = useEstado(e => e.abierto === libro.id)
   const grosor = grosorLibro(libro)
   const alto = altoLibro(libro)
-  const medidas = useMemo<[number, number, number]>(() => [grosor, alto, PROFUNDIDAD_LIBRO], [grosor, alto])
+  const geometria = useMemo(() => cajaLibro(grosor, alto, PROFUNDIDAD_LIBRO), [grosor, alto])
+  useEffect(() => () => geometria.dispose(), [geometria])
   const destinoRef = useRef(destino)
   destinoRef.current = destino
 
-  const materiales = useMemo(() => {
-    const color = colorDeLibro(libro)
-    const tapa = () => new MeshStandardMaterial({ color, roughness: 0.6, emissive: '#ffb347', emissiveIntensity: 0 })
-    const papel = new MeshStandardMaterial({ color: PAPEL, roughness: 0.95 })
-    // Orden de caras de BoxGeometry: +x (portada), -x (contra), +y, -y, +z (lomo), -z.
-    return [tapa(), tapa(), papel, papel, tapa(), papel]
-  }, [libro])
+  const material = useMemo(() => new MeshStandardMaterial({ roughness: 0.6, emissive: '#ffb347', emissiveIntensity: 0 }), [libro])
+  useEffect(() => () => { material.map?.dispose(); material.dispose() }, [material])
+
+  // La portada real solo se baja cuando se va a ver: al abrir el libro o si
+  // espera tumbado en la mesa de la entrada. Al abrirlo se pinta en alta.
+  const verPortada = abierto || destino.tipo === 'mesa'
+  const estadoTextura = useRef<{ fondo: string; img: HTMLImageElement | null; alta: boolean }>({ fondo: colorDeLibro(libro), img: null, alta: false })
 
   useEffect(() => {
     let vivo = true
-    const pintar = (fondo: string) => {
+    const e = estadoTextura.current
+    const pintar = () => {
       if (!vivo) return
-      for (const i of [0, 1]) if (!materiales[i].map) materiales[i].color.set(fondo)
-      document.fonts.load('600 20px Poppins').finally(() => {
-        if (!vivo) return
-        const lomo = materiales[4]
-        lomo.map?.dispose()
-        lomo.map = texturaLomo(libro, grosor, alto, fondo)
-        lomo.color.set('#ffffff')
-        lomo.needsUpdate = true
-      })
+      material.map?.dispose()
+      material.map = texturaLibro(libro, grosor, alto, e.fondo, e.img, e.alta)
+      material.needsUpdate = true
     }
-    pintar(colorDeLibro(libro))
-    if (libro.portada) colorDominante(libro.portada).then(pintar).catch(() => {})
+    e.alta = abierto
+    document.fonts.load('600 20px Poppins').finally(pintar)
+    if (libro.portada && !e.img && verPortada) {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => { e.img = img; pintar() }
+      img.src = libro.portada
+    }
+    if (libro.portada) colorDominante(libro.portada).then(c => { if (c !== e.fondo) { e.fondo = c; pintar() } }).catch(() => {})
     return () => { vivo = false }
-  }, [libro, materiales, grosor, alto])
-
-  // La portada en alta solo se baja cuando se va a ver: al abrir o si el libro
-  // espera tumbado en la mesa de la entrada, con la portada hacia arriba.
-  const verPortada = abierto || destino.tipo === 'mesa'
-  useEffect(() => {
-    if (!verPortada || !libro.portada || materiales[0].map) return
-    cargador.load(libro.portada, tex => {
-      tex.colorSpace = SRGBColorSpace
-      tex.anisotropy = 8
-      materiales[0].map = tex
-      materiales[0].color.set('#ffffff')
-      materiales[0].needsUpdate = true
-    })
-  }, [verPortada, libro, materiales])
+  }, [libro, material, grosor, alto, verPortada, abierto])
 
   useEffect(() => {
     const m = malla.current
@@ -190,7 +177,7 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
     const m = malla.current
     const guiando = leerEstado().guia === libro.id
     const brillo = guiando ? 0.35 + 0.35 * Math.sin(clock.elapsedTime * 5) : 0
-    for (const i of [0, 1, 4]) materiales[i].emissiveIntensity = brillo
+    material.emissiveIntensity = brillo
     const d = destinoRef.current
     const { pos, rot, normal } = objetivo(d)
 
@@ -246,8 +233,6 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
   })
 
   return (
-    <mesh ref={malla} material={materiales} castShadow receiveShadow>
-      <boxGeometry args={medidas} />
-    </mesh>
+    <mesh ref={malla} geometry={geometria} material={material} receiveShadow />
   )
 }

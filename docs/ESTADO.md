@@ -21,6 +21,10 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 5 | Cuentas, enlace con Bitácora, guardar en la nube | hecha |
 | 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | siguiente |
 
+## Rendimiento (24-11)
+
+Iba lento porque cada fotograma pedía unas 3.000 llamadas de dibujo a la gráfica. Ahora son menos de 300: cada libro es una sola pieza con una sola textura, cada carta dos caras, sin cristal con transmisión, sombras calculadas solo cuando cambian los muebles, tres luces en vez de ocho y el posprocesado solo en calidad alta. Hay tres niveles de calidad (alta, media y baja; media por defecto) y, si va a menos de 28 imágenes por segundo, baja sola un nivel y avisa (se puede desactivar en la pausa).
+
 ## Cuenta y Bitácora
 
 1. **Crear cuenta:** en la pantalla de inicio, «crear cuenta.» con tu correo y una contraseña (8 caracteres o más). Te llega un correo para confirmarla; después entras con «entrar.». Sin cuenta puedes jugar igual, pero solo se guarda en ese navegador.
@@ -33,13 +37,13 @@ Todo lo que hagas se guarda en la nube y aparece igual en cualquier ordenador do
 ## Cómo se juega
 
 1. **Entrar:** clic en la pantalla. `w a s d` para andar, `mayús` para correr, ratón para mirar, rueda para acercar la vista. `esc` abre la pausa (controles y ajustes: sensibilidad, calidad gráfica, sonido, flechas).
-2. **Mirar un libro:** apunta con el punto del centro y haz clic. El libro vuela hacia ti enseñando la portada, con la ficha al lado. Mueve el ratón para girarlo, `f` le da la vuelta, la rueda lo acerca, `p` cambia la portada (otras ediciones, una foto tuya o un enlace) y clic lo devuelve.
+2. **Mirar un libro:** al apuntarlo ves su título y autor; clic (o `e`) lo saca y vuela hacia ti enseñando la portada, con la ficha al lado. Mueve el ratón para girarlo, `f` o `r` le da la vuelta, la rueda lo acerca, `p` cambia la portada (otras ediciones, una foto tuya o un enlace) y clic derecho (o `q`) lo devuelve.
 3. **Ordenar una estantería:** mirando uno de sus libros, pulsa `o` y elige: autor, saga, color, alfabético, año, páginas o fecha de alta. Los libros se recolocan en cascada.
 4. **El carro:** `c` lo deja aparcado para pasear sin él; acércate y pulsa `c` (o haz clic en él) para cogerlo.
 5. **Ordenar lo nuevo:**
    1. En la mesa "por ordenar." de la entrada, haz clic en un libro para cogerlo al carro (`t` los coge todos).
    2. Sigue las flechas del suelo (`g` las apaga) hasta el hueco que brilla, con una flecha flotando encima.
-   3. Apunta al hueco y haz clic: el libro vuela a su sitio. Arriba a la izquierda se cuenta lo que llevas hoy y qué toca hacer.
+   3. Apunta al hueco y haz clic: el libro vuela a su sitio. O pulsa `v` junto a una estantería y se colocan de golpe todos los del carro que van ahí. Arriba a la izquierda se cuenta lo que llevas hoy y qué toca hacer.
 6. **Zona Pokémon** (a la izquierda, con suelo de tienda): clic en una carta para mirarla (las brillantes cambian de color al girarlas) con su precio de Cardmarket; `b` la guarda en una caja negra; clic en una caja para abrirla y devolver cartas al expositor; `o` mirando una carta ordena el expositor por set, nombre o rareza. También hay estantería de producto sellado y una vitrina con las graduadas.
 7. **Ordenador retro** (a la izquierda de la entrada): clic para usarlo y escribe `ayuda`. Los más útiles:
    - `buscar tolkien` y luego `ir 1`: te marca el libro con una columna de luz.

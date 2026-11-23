@@ -4,10 +4,7 @@ import { CanvasTexture, Group, SRGBColorSpace } from 'three'
 import { CRITERIOS } from '../libros/orden'
 import type { Mueble, Seccion } from '../tipos'
 import { ISLA_Z, MUEBLE, SALA } from './distribucion'
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { alfombra, madera, pared, sueloMadera } from './texturas'
-
-RectAreaLightUniformsLib.init()
 
 const MADERA = '#8a5a34'
 const MADERA_CLARA = '#a8754a'
@@ -159,7 +156,6 @@ function Ventanas() {
               <meshStandardMaterial color="#f4ece0" roughness={0.6} />
             </mesh>
           ))}
-          <rectAreaLight args={[cielo.color, cielo.fuerza, 1.5, 1.4]} position={[0, 0, 0.05]} rotation={[0, Math.PI, 0]} />
         </group>
       ))}
     </>
@@ -177,7 +173,7 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         intensity={1.2}
         color="#ffe2b8"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-7}
         shadow-camera-right={7}
         shadow-camera-top={6}
@@ -185,9 +181,11 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
       />
+      {/* Seis lámparas a la vista, pero solo tres dan luz: cada luz encarece
+          todos los píxeles de la escena. */}
       {[-3, 0, 3].flatMap(x => [-3.4, 1.2].map(z => (
         <group key={`${x}${z}`} position={[x, alto - 0.05, z]}>
-          <pointLight intensity={1.6} distance={6} decay={1.6} color="#ffd9a0" />
+          {z > 0 === (x === 0) && <pointLight intensity={2.2} distance={7} decay={1.5} color="#ffd9a0" />}
           <mesh>
             <cylinderGeometry args={[0.18, 0.24, 0.1, 12]} />
             <meshStandardMaterial color="#fff4dc" emissive="#ffd9a0" emissiveIntensity={1.2} />

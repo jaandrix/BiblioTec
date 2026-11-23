@@ -123,7 +123,7 @@ export function Sellado3D({ sellado, posicion, giro }: { sellado: Sellado; posic
 
   return (
     <group ref={grupo}>
-      <mesh material={materiales} castShadow receiveShadow>
+      <mesh material={materiales} receiveShadow>
         <boxGeometry args={medidas} />
       </mesh>
     </group>

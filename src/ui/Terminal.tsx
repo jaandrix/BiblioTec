@@ -79,6 +79,7 @@ export function Terminal() {
 
   const tecla = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation()
+    sonar.tecla()
     if (e.key === 'Enter') enviar()
     else if (e.key === 'Escape') salir(false)
     else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
