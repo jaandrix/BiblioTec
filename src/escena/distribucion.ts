@@ -1,6 +1,6 @@
 import type { Config } from '../estado'
 import { ordenar } from '../libros/orden'
-import type { Caja, Hueco, Libro, Mueble, Seccion } from '../tipos'
+import type { Caja, Criterio, Hueco, Libro, Mueble, Seccion } from '../tipos'
 
 export const SALA = { ancho: 12, fondo: 10, alto: 3.2 }
 export const MUEBLE = { ancho: 1, alto: 2.1, fondo: 0.34, baldas: 5, tabla: 0.025 }
@@ -12,10 +12,40 @@ const LLENADO = 0.85
 // Se llena primero la balda a la altura de los ojos y se baja; la de arriba,
 // incómoda de leer, queda para el final.
 const ORDEN_BALDAS = [3, 2, 1, 0, 4]
-const ORDEN_GENEROS = ['novela', 'clásicos', 'fantasía', 'ciencia ficción', 'ensayo']
+const ORDEN_GENEROS = ['novela', 'clásicos', 'fantasía', 'ciencia ficción', 'ensayo', 'películas', 'series', 'videojuegos']
+const SECCION_DE: Record<string, string> = { pelicula: 'películas', serie: 'series', videojuego: 'videojuegos' }
+const CRITERIO_INICIAL: Record<string, Criterio> = { películas: 'alfabetico', series: 'alfabetico', videojuegos: 'saga' }
+
+// Medidas reales aproximadas (metros) de cada caja: grosor, alto y fondo.
+const CAJAS: Record<string, [number, number, number]> = {
+  dvd: [0.014, 0.19, 0.135],
+  bluray: [0.012, 0.17, 0.135],
+  '4k': [0.012, 0.17, 0.135],
+  switch: [0.011, 0.17, 0.105],
+  ds: [0.014, 0.125, 0.137],
+  '3ds': [0.014, 0.125, 0.137],
+  ps: [0.014, 0.17, 0.135],
+  xbox: [0.014, 0.19, 0.135],
+  cartucho: [0.008, 0.06, 0.05],
+}
+
+function cajaDe(libro: Libro) {
+  if (libro.tipo === 'libro') return null
+  if (libro.formato === 'cartucho') return CAJAS.cartucho
+  if (libro.tipo === 'videojuego') {
+    const p = (libro.plataforma ?? '').toLowerCase()
+    return CAJAS[p] ?? (p.startsWith('ps') ? CAJAS.ps : p.startsWith('xbox') ? CAJAS.xbox : CAJAS.switch)
+  }
+  return CAJAS[libro.formato ?? 'dvd'] ?? CAJAS.dvd
+}
 
 export function grosorLibro(libro: Libro) {
-  return Math.max(0.012, (libro.paginas ?? 300) * 0.00006 + 0.004)
+  const caja = cajaDe(libro)
+  return caja ? caja[0] : Math.max(0.012, (libro.paginas ?? 300) * 0.00006 + 0.004)
+}
+
+export function fondoLibro(libro: Libro) {
+  return cajaDe(libro)?.[2] ?? PROFUNDIDAD_LIBRO
 }
 
 function hash(texto: string) {
@@ -25,6 +55,8 @@ function hash(texto: string) {
 }
 
 export function altoLibro(libro: Libro) {
+  const caja = cajaDe(libro)
+  if (caja) return caja[1]
   return [0.21, 0.23, 0.23, 0.24, 0.25][hash(libro.id) % 5]
 }
 
@@ -53,7 +85,7 @@ function modulosNecesarios(libros: Libro[]) {
 export function secciones(libros: Libro[], config: Config): Seccion[] {
   const grupos = new Map<string, Libro[]>()
   for (const l of libros) {
-    const g = l.genero ?? 'sin género'
+    const g = SECCION_DE[l.tipo] ?? l.genero ?? 'sin género'
     grupos.set(g, [...(grupos.get(g) ?? []), l])
   }
   const peso = (g: string) => (ORDEN_GENEROS.includes(g) ? ORDEN_GENEROS.indexOf(g) : 99)
@@ -62,7 +94,7 @@ export function secciones(libros: Libro[], config: Config): Seccion[] {
     .map(g => ({
       id: g,
       nombre: g,
-      criterio: config.criterios[g] ?? 'autor',
+      criterio: config.criterios[g] ?? CRITERIO_INICIAL[g] ?? 'autor',
       modulos: modulosNecesarios(grupos.get(g)!) + (config.extra[g] ?? 0),
       libros: grupos.get(g)!,
     }))
@@ -82,7 +114,6 @@ export function construir(libros: Libro[], config: Config, colorDe: (l: Libro) =
   const huecos: Hueco[] = []
   const sobran: Record<string, Libro[]> = {}
   const paso = (MUEBLE.alto - MUEBLE.tabla) / MUEBLE.baldas
-  const lz = MUEBLE.fondo / 2 - PROFUNDIDAD_LIBRO / 2 - 0.015
   let cursor = 0
   const lista_secciones = secciones(libros, config)
 
@@ -106,11 +137,13 @@ export function construir(libros: Libro[], config: Config, colorDe: (l: Libro) =
           const g = grosorLibro(libro)
           if (x + g > UTIL / 2) break
           const alto = altoLibro(libro)
+          const fondo = fondoLibro(libro)
+          const lz = MUEBLE.fondo / 2 - fondo / 2 - 0.015
           const lx = x + g / 2
           huecos.push({
             libro,
             posicion: [m.x + lx * cos + lz * sin, suelo + alto / 2, m.z - lx * sin + lz * cos],
-            medidas: [g, alto, PROFUNDIDAD_LIBRO],
+            medidas: [g, alto, fondo],
             giro: m.giro,
             seccion: s.id,
             modulo: m.indice,

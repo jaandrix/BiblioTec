@@ -5,6 +5,7 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo } from 'react'
 import { PCFSoftShadowMap } from 'three'
 import librosDemo from './datos/libros-demo.json'
+import mediosDemo from './datos/medios-demo.json'
 import pokemonDemo from './datos/pokemon-demo.json'
 import { CAJAS_POKEMON, ZonaPokemon } from './escena/pokemon/ZonaPokemon'
 import { Brazos, Carro } from './escena/Carro'
@@ -23,7 +24,7 @@ import { colorDeLibro } from './libros/color'
 import type { Carta, Libro as TLibro, Sellado } from './tipos'
 import { Interfaz } from './ui/Interfaz'
 
-const LIBROS = librosDemo as TLibro[]
+const LIBROS = [...librosDemo, ...mediosDemo] as TLibro[]
 const CARTAS = pokemonDemo.cartas as Carta[]
 const SELLADOS = pokemonDemo.sellados as Sellado[]
 

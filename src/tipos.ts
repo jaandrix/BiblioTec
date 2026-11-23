@@ -1,6 +1,13 @@
+export type TipoMedio = 'libro' | 'pelicula' | 'serie' | 'videojuego'
+export type Formato = 'dvd' | 'bluray' | '4k' | 'caja' | 'cartucho'
+
+// "Libro" es todo lo que va de pie en una estantería: libros, películas,
+// series y videojuegos. Lo que cambia entre ellos son las medidas y el lomo.
 export interface Libro {
   id: string
-  tipo: 'libro'
+  tipo: TipoMedio
+  formato?: Formato
+  plataforma?: string
   titulo: string
   autor: string
   anio: number | null

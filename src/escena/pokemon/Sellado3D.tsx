@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { CanvasTexture, Group, MeshStandardMaterial, Quaternion, SRGBColorSpace, Vector3 } from 'three'
+import { BoxGeometry, CanvasTexture, Group, MeshStandardMaterial, Quaternion, SRGBColorSpace, Vector3 } from 'three'
 import { useEstado } from '../../estado'
 import { colorDominante } from '../../libros/color'
 import type { FormatoSellado, Sellado } from '../../tipos'
@@ -34,40 +34,62 @@ function aclarar(hex: string, k: number) {
 function pintarFrente(s: Sellado, color: string, logo: HTMLImageElement | null) {
   const [w, h] = MEDIDAS_SELLADO[s.formato]
   const l = document.createElement('canvas')
-  l.width = 512
+  // Los últimos 16 px son el color de los costados (ver cajaConFrente).
+  l.width = 512 + 16
   l.height = Math.round((512 * h) / w)
   const c = l.getContext('2d')!
+  c.fillStyle = color
+  c.fillRect(512, 0, 16, l.height)
+  c.save()
+  c.beginPath()
+  c.rect(0, 0, 512, l.height)
+  c.clip()
   const g = c.createLinearGradient(0, 0, 0, l.height)
   g.addColorStop(0, aclarar(color, 0.35))
   g.addColorStop(1, color)
   c.fillStyle = g
-  c.fillRect(0, 0, l.width, l.height)
+  c.fillRect(0, 0, 512, l.height)
   c.fillStyle = 'rgba(255,255,255,0.12)'
-  for (let i = -l.height; i < l.width; i += 46) {
+  for (let i = -l.height; i < 512; i += 46) {
     c.beginPath(); c.moveTo(i, l.height); c.lineTo(i + l.height, 0); c.lineTo(i + l.height + 18, 0); c.lineTo(i + 18, l.height); c.fill()
   }
   if (logo) {
-    const max = l.width * 0.78, alto = l.height * 0.5
+    const max = 512 * 0.78, alto = l.height * 0.5
     const k = Math.min(max / logo.width, alto / logo.height)
-    c.drawImage(logo, (l.width - logo.width * k) / 2, l.height * 0.38 - (logo.height * k) / 2, logo.width * k, logo.height * k)
+    c.drawImage(logo, (512 - logo.width * k) / 2, l.height * 0.38 - (logo.height * k) / 2, logo.width * k, logo.height * k)
   } else {
     c.fillStyle = '#fff'
     c.font = '600 44px Poppins, sans-serif'
     c.textAlign = 'center'
-    c.fillText(s.set, l.width / 2, l.height * 0.4)
+    c.fillText(s.set, 256, l.height * 0.4)
   }
   const banda = Math.max(56, l.height * 0.16)
   c.fillStyle = '#ffcb05'
-  c.fillRect(0, l.height - banda, l.width, banda)
+  c.fillRect(0, l.height - banda, 512, banda)
   c.fillStyle = '#1d3f8f'
   c.font = `600 ${Math.round(banda * 0.42)}px Poppins, sans-serif`
   c.textAlign = 'center'
   c.textBaseline = 'middle'
-  c.fillText(ETIQUETA[s.formato], l.width / 2, l.height - banda / 2)
+  c.fillText(ETIQUETA[s.formato], 256, l.height - banda / 2)
+  c.restore()
   const t = new CanvasTexture(l)
   t.colorSpace = SRGBColorSpace
   t.anisotropy = 8
   return t
+}
+
+// Una sola pieza por producto: el frente usa la parte izquierda de la textura
+// y los demás lados, la tira de color de la derecha.
+function cajaConFrente(medidas: [number, number, number]) {
+  const g = new BoxGeometry(...medidas)
+  const uv = g.attributes.uv
+  const corte = 512 / 528
+  for (let i = 0; i < uv.count; i++) {
+    const frente = Math.floor(i / 4) === 4
+    uv.setX(i, frente ? uv.getX(i) * corte : corte + 0.005 + uv.getX(i) * (1 - corte - 0.01))
+  }
+  g.clearGroups()
+  return g
 }
 
 export function Sellado3D({ sellado, posicion, giro }: { sellado: Sellado; posicion: [number, number, number]; giro: number }) {
@@ -77,11 +99,9 @@ export function Sellado3D({ sellado, posicion, giro }: { sellado: Sellado; posic
   const inspeccionar = useInspeccion(sellado.id, grupo, FRENTE, Math.max(1.2, medidas[1] / 0.12))
   const brillo = sellado.formato === 'sobre' || sellado.formato === 'lata'
 
-  const materiales = useMemo(() => {
-    const lado = new MeshStandardMaterial({ color: '#2b4a9a', roughness: brillo ? 0.3 : 0.6, metalness: brillo ? 0.6 : 0 })
-    const frente = new MeshStandardMaterial({ color: '#ffffff', roughness: brillo ? 0.25 : 0.5, metalness: brillo ? 0.45 : 0 })
-    return [lado, lado, lado, lado, frente, lado]
-  }, [brillo])
+  const material = useMemo(() => new MeshStandardMaterial({ color: '#ffffff', roughness: brillo ? 0.25 : 0.5, metalness: brillo ? 0.45 : 0 }), [brillo])
+  const geometria = useMemo(() => cajaConFrente(medidas), [medidas])
+  useEffect(() => () => geometria.dispose(), [geometria])
 
   useEffect(() => {
     let vivo = true
@@ -89,17 +109,16 @@ export function Sellado3D({ sellado, posicion, giro }: { sellado: Sellado; posic
     img.crossOrigin = 'anonymous'
     const listo = (color: string, logo: HTMLImageElement | null) => {
       if (!vivo) return
-      materiales[0].color.set(color)
-      materiales[4].map?.dispose()
-      materiales[4].map = pintarFrente(sellado, color, logo)
-      materiales[4].needsUpdate = true
+      material.map?.dispose()
+      material.map = pintarFrente(sellado, color, logo)
+      material.needsUpdate = true
     }
     if (!sellado.logo) { listo('#2b4a9a', null); return }
     img.onload = () => colorDominante(sellado.logo!).then(c => listo(c, img)).catch(() => listo('#2b4a9a', img))
     img.onerror = () => listo('#2b4a9a', null)
     img.src = sellado.logo
     return () => { vivo = false }
-  }, [sellado, materiales])
+  }, [sellado, material])
 
   useEffect(() => {
     const g = grupo.current
@@ -123,9 +142,7 @@ export function Sellado3D({ sellado, posicion, giro }: { sellado: Sellado; posic
 
   return (
     <group ref={grupo}>
-      <mesh material={materiales} receiveShadow>
-        <boxGeometry args={medidas} />
-      </mesh>
+      <mesh geometry={geometria} material={material} receiveShadow />
     </group>
   )
 }

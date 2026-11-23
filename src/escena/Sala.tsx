@@ -1,9 +1,10 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { CanvasTexture, Group, SRGBColorSpace } from 'three'
+import { CanvasTexture, Group, MeshStandardMaterial, SRGBColorSpace } from 'three'
 import { CRITERIOS } from '../libros/orden'
 import type { Mueble, Seccion } from '../tipos'
 import { ISLA_Z, MUEBLE, SALA } from './distribucion'
+import { unirCajas } from './fusionar'
 import { alfombra, madera, pared, sueloMadera } from './texturas'
 
 const MADERA = '#8a5a34'
@@ -55,12 +56,28 @@ function Cartel({ seccion }: { seccion: Seccion }) {
   )
 }
 
+// Todas las estanterías son iguales: se comparten geometría y materiales, y
+// cada una son tres piezas (laterales, fondo y baldas) en vez de nueve.
+let piezasEstanteria: { lados: ReturnType<typeof unirCajas>; fondo: ReturnType<typeof unirCajas>; baldas: ReturnType<typeof unirCajas>; mLados: MeshStandardMaterial; mFondo: MeshStandardMaterial; mBaldas: MeshStandardMaterial } | null = null
+function estanteriaCompartida() {
+  if (piezasEstanteria) return piezasEstanteria
+  const t = MUEBLE.tabla
+  const paso = (MUEBLE.alto - t) / MUEBLE.baldas
+  piezasEstanteria = {
+    lados: unirCajas([-1, 1].map(lado => ({ medidas: [t, MUEBLE.alto, MUEBLE.fondo], posicion: [lado * (MUEBLE.ancho / 2 - t / 2), MUEBLE.alto / 2, 0] }))),
+    fondo: unirCajas([{ medidas: [MUEBLE.ancho - 2 * t, MUEBLE.alto, 0.012], posicion: [0, MUEBLE.alto / 2, -MUEBLE.fondo / 2 + 0.006] }]),
+    baldas: unirCajas(Array.from({ length: MUEBLE.baldas + 1 }, (_, i) => ({ medidas: [MUEBLE.ancho - 2 * t, t, MUEBLE.fondo], posicion: [0, i * paso + t / 2, 0] }))),
+    mLados: new MeshStandardMaterial({ map: madera(MADERA, false), roughness: 0.75 }),
+    mFondo: new MeshStandardMaterial({ map: madera('#7a4e2c', false), roughness: 0.9 }),
+    mBaldas: new MeshStandardMaterial({ map: madera(MADERA_CLARA), roughness: 0.7 }),
+  }
+  return piezasEstanteria
+}
+
 function Estanteria({ m, seccion }: { m: Mueble; seccion?: Seccion }) {
+  const piezas = estanteriaCompartida()
   const grupo = useRef<Group>(null!)
   const crecer = useRef(0)
-  const paso = (MUEBLE.alto - MUEBLE.tabla) / MUEBLE.baldas
-  const t = MUEBLE.tabla
-
   const colocado = useRef(false)
 
   // Un mueble nuevo (al ampliar) sube desde el suelo; uno que se corre de sitio
@@ -84,22 +101,9 @@ function Estanteria({ m, seccion }: { m: Mueble; seccion?: Seccion }) {
 
   return (
     <group ref={grupo} scale={[1, 0.001, 1]}>
-      {[-1, 1].map(lado => (
-        <mesh key={lado} position={[lado * (MUEBLE.ancho / 2 - t / 2), MUEBLE.alto / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[t, MUEBLE.alto, MUEBLE.fondo]} />
-          <meshStandardMaterial map={madera(MADERA, false)} roughness={0.75} />
-        </mesh>
-      ))}
-      <mesh position={[0, MUEBLE.alto / 2, -MUEBLE.fondo / 2 + 0.006]} receiveShadow>
-        <boxGeometry args={[MUEBLE.ancho - 2 * t, MUEBLE.alto, 0.012]} />
-        <meshStandardMaterial map={madera('#7a4e2c', false)} roughness={0.9} />
-      </mesh>
-      {Array.from({ length: MUEBLE.baldas + 1 }, (_, i) => (
-        <mesh key={i} position={[0, i * paso + t / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[MUEBLE.ancho - 2 * t, t, MUEBLE.fondo]} />
-          <meshStandardMaterial map={madera(MADERA_CLARA)} roughness={0.7} />
-        </mesh>
-      ))}
+      <mesh geometry={piezas.lados} material={piezas.mLados} castShadow receiveShadow />
+      <mesh geometry={piezas.fondo} material={piezas.mFondo} receiveShadow />
+      <mesh geometry={piezas.baldas} material={piezas.mBaldas} castShadow receiveShadow />
       {m.indice === 0 && seccion && <Cartel seccion={seccion} />}
     </group>
   )

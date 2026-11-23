@@ -22,10 +22,12 @@ function Ficha({ libro }: { libro: Libro }) {
   return (
     <aside className="ficha">
       <h1>{libro.titulo}</h1>
-      <p className="autor">{libro.autor}</p>
+      <p className="autor">{libro.autor || { pelicula: 'película.', serie: 'serie.', videojuego: 'videojuego.', libro: '' }[libro.tipo]}</p>
       <div className="filas">
         <Fila etiqueta="año." valor={libro.anio} />
-        <Fila etiqueta="páginas." valor={libro.paginas} />
+        {libro.tipo === 'libro' && <Fila etiqueta="páginas." valor={libro.paginas} />}
+        {libro.tipo === 'videojuego' && <Fila etiqueta="plataforma." valor={libro.plataforma ?? 'sin indicar.'} />}
+        {libro.tipo !== 'libro' && <Fila etiqueta="formato." valor={libro.formato === 'cartucho' ? 'cartucho suelto.' : libro.formato === 'caja' ? 'caja.' : libro.formato ?? 'dvd'} />}
         {libro.saga && <Fila etiqueta="saga." valor={`${libro.saga}, ${libro.tomo}`} />}
         {h && <Fila etiqueta="aquí." valor={`${h.seccion}, mueble ${h.modulo + 1}, balda ${h.balda}`} />}
         <Fila etiqueta="en casa." valor={libro.ubicacion ?? 'sin ubicación.'} />
@@ -224,7 +226,7 @@ export function Interfaz({ libros, cartas, sellados }: { libros: Libro[]; cartas
   }, [])
 
   const titulo = apuntado ? libros.find(l => l.id === apuntado) ?? cartas.find(c => c.id === apuntado) ?? sellados.find(s => s.id === apuntado) : null
-  const rotulo = !titulo ? null : 'autor' in titulo ? `${titulo.titulo}, ${titulo.autor}${titulo.anio ? ` (${titulo.anio})` : ''}` : 'rareza' in titulo ? `${titulo.nombre}, ${titulo.set}` : titulo.nombre
+  const rotulo = !titulo ? null : 'autor' in titulo ? `${titulo.titulo}${titulo.autor ? `, ${titulo.autor}` : ''}${titulo.anio ? ` (${titulo.anio})` : ''}` : 'rareza' in titulo ? `${titulo.nombre}, ${titulo.set}` : titulo.nombre
   const pista = !apuntado ? null
     : apuntado === 'terminal' ? <><kbd>clic</kbd> usar el ordenador</>
     : apuntado === 'carro' ? <><kbd>clic</kbd> coger el carro</>

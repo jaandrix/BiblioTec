@@ -1,5 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
+import { PCFShadowMap, PCFSoftShadowMap } from 'three'
 import { avisar, cambiarAjuste, leerEstado } from '../estado'
 
 // Las sombras solo las proyectan los muebles, que casi nunca se mueven: el
@@ -7,14 +8,25 @@ import { avisar, cambiarAjuste, leerEstado } from '../estado'
 // mientras se deslizan los muebles) en vez de en cada fotograma.
 export function SombrasEstaticas({ version }: { version: unknown }) {
   const gl = useThree(s => s.gl)
+  const escena = useThree(s => s.scene)
   const pendientes = useRef(90)
   const calidad = leerEstado().config.calidad
 
   useEffect(() => {
     gl.shadowMap.autoUpdate = false
     gl.shadowMap.enabled = calidad !== 'baja'
+    // El suavizado de sombras solo en alta: en media se nota poco y cuesta.
+    const tipo = calidad === 'alta' ? PCFSoftShadowMap : PCFShadowMap
+    if (gl.shadowMap.type !== tipo) {
+      gl.shadowMap.type = tipo
+      // Cambiar el tipo de sombra obliga a recompilar los materiales.
+      escena.traverse(o => {
+        const m = (o as { material?: { needsUpdate: boolean } | { needsUpdate: boolean }[] }).material
+        for (const x of Array.isArray(m) ? m : m ? [m] : []) x.needsUpdate = true
+      })
+    }
     pendientes.current = 90
-  }, [gl, version, calidad])
+  }, [gl, escena, version, calidad])
 
   useFrame(() => {
     if (pendientes.current <= 0) return

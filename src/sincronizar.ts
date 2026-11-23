@@ -91,10 +91,11 @@ export async function salirDeLaCuenta() {
 // Lee Ocio y Coleccionables con el código de solo lectura que se genera en
 // Bitácora. Lo nuevo no entra directo: pasa por la revisión «¿lo tienes en
 // físico?» (decisiones 31 a 33). Películas, series y juegos esperan a la fase
-// en que tengan estanterías, así que no se marcan como vistos todavía.
+// Desde la fase 6 entran también películas, series y videojuegos (los de Ocio
+// y los de Coleccionables, que son la colección física de juegos).
 
-interface OcioBitacora { id: string; tipo: string; titulo: string; autor: string | null; anio: number | null; portada: string | null }
-interface ColecBitacora { id: string; nombre: string; esCarta: boolean; carta: { set?: string; numero?: string; anio?: number; estado?: string } | null; mercadoId: string | null }
+interface OcioBitacora { id: string; tipo: string; titulo: string; autor: string | null; anio: number | null; portada: string | null; etiquetas?: string[] }
+interface ColecBitacora { id: string; nombre: string; categoria?: string; esCarta: boolean; carta: { set?: string; numero?: string; anio?: number; estado?: string } | null; mercadoId: string | null }
 
 export function formatoDeSellado(nombre: string): FormatoSellado {
   const n = nombre.toLowerCase()
@@ -122,11 +123,16 @@ export async function traerDeBitacora(silencioso = false) {
   const { vistos } = leerEstado().enlace
   const nuevos: ItemBitacora[] = []
   for (const o of ocio) {
-    if (o.tipo !== 'libro' || vistos.includes('o_' + o.id)) continue
-    nuevos.push({ id: 'o_' + o.id, clase: 'libro', titulo: o.titulo, detalle: o.autor ?? 'libro', imagen: o.portada, datos: { ...o } })
+    if (vistos.includes('o_' + o.id) || !['libro', 'pelicula', 'serie', 'videojuego'].includes(o.tipo)) continue
+    const detalle = o.tipo === 'libro' ? o.autor ?? '' : o.tipo === 'videojuego' ? (o.etiquetas ?? []).join(', ') : o.anio ? String(o.anio) : ''
+    nuevos.push({ id: 'o_' + o.id, clase: o.tipo as ItemBitacora['clase'], titulo: o.titulo, detalle, imagen: o.portada, datos: { ...o } })
   }
   for (const c of coleccionables) {
-    if (!c.esCarta || vistos.includes('c_' + c.id)) continue
+    if (vistos.includes('c_' + c.id)) continue
+    if (!c.esCarta) {
+      if (/videojuego|juego|game/i.test(c.categoria ?? '')) nuevos.push({ id: 'c_' + c.id, clase: 'videojuego', titulo: c.nombre.replace(/\s*\((box|loose|jp)\)/gi, ''), detalle: /\(loose\)/i.test(c.nombre) ? 'cartucho suelto' : 'con caja', imagen: null, datos: { ...c, coleccionable: true } })
+      continue
+    }
     const sellado = c.carta?.estado === 'Sellado'
     const clase = sellado ? 'sellado' : c.mercadoId ? 'carta' : 'incompleta'
     nuevos.push({
@@ -207,6 +213,36 @@ export async function cartaDesdeBitacora(item: ItemBitacora): Promise<Carta | nu
     holo: !/^(común|poco común|uncommon|common)$/i.test(d.rarity ?? ''),
     estado: c.carta?.estado ?? 'Near Mint',
     ...(psa ? { graduada: { empresa: psa[1].toUpperCase(), nota: Number(psa[2]) } } : {}),
+  }
+}
+
+// Plataforma por la etiqueta de Ocio o, en los coleccionables, por el
+// nombre: la colección física suele ser de DS y 3DS.
+const PLATAFORMAS: [RegExp, string][] = [
+  [/switch/i, 'switch'],
+  [/\b3ds\b|new leaf|pok[eé]mon (x|y|sol|luna|rub[ií] omega|zafiro alfa|super mystery)|yo-?kai|inazuma eleven go|dragon quest vii/i, '3ds'],
+  [/\bds\b|heartgold|soulsilver|platin|blanco|black|white|negro|ranger|mystery dungeon|rescue team|inazuma eleven 3/i, 'ds'],
+  [/ps5|ps4|playstation/i, 'ps'],
+  [/xbox/i, 'xbox'],
+]
+
+export function medioDesdeBitacora(item: ItemBitacora): Libro {
+  const d = item.datos as unknown as OcioBitacora & ColecBitacora & { coleccionable?: boolean }
+  const tipo = item.clase as Libro['tipo']
+  const pista = [d.titulo ?? d.nombre, ...(d.etiquetas ?? [])].join(' ')
+  const plataforma = tipo === 'videojuego' ? PLATAFORMAS.find(([re]) => re.test(pista))?.[1] ?? 'otra' : undefined
+  const suelto = /\(loose\)/i.test(d.nombre ?? '')
+  return {
+    id: 'bit_' + item.id,
+    tipo,
+    titulo: item.titulo,
+    autor: '',
+    anio: d.anio ?? null,
+    paginas: null,
+    portada: d.portada ?? null,
+    formato: tipo === 'videojuego' ? (suelto ? 'cartucho' : 'caja') : 'dvd',
+    ...(plataforma ? { plataforma } : {}),
+    alta: new Date().toLocaleDateString('sv-SE'),
   }
 }
 

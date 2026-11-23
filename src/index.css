@@ -244,3 +244,6 @@ kbd {
 .pista-mirilla { display: grid; justify-items: center; gap: 4px; }
 .pista-mirilla b { font-weight: 600; font-size: 15px; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; }
 .nota-controles { display: block !important; color: var(--tinta-suave); font-size: 12px; margin-top: 6px; }
+
+.atajos-revision { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.atajos-revision button { font-size: 12px !important; padding: 6px 10px !important; }

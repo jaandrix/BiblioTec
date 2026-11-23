@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { anadirCarta, anadirPendiente, anadirSellado, avisar, cambiarEnlace, cambiarEstado, leerEstado, quitarEjemplos, useEstado, type ItemBitacora } from '../estado'
 import { entrar } from '../escena/registro'
-import { cambiarClave, cartaDesdeBitacora, crearCuenta, entrarConCorreo, libroDesdeBitacora, recordarClave, salirDeLaCuenta, selladoDesdeBitacora, traerDeBitacora } from '../sincronizar'
+import { cambiarClave, cartaDesdeBitacora, crearCuenta, entrarConCorreo, libroDesdeBitacora, medioDesdeBitacora, recordarClave, salirDeLaCuenta, selladoDesdeBitacora, traerDeBitacora } from '../sincronizar'
 
 export function Acceso() {
   const [modo, setModo] = useState<'entrar' | 'crear' | 'recordar' | 'nueva'>(() => (window.location.hash.includes('type=recovery') ? 'nueva' : 'entrar'))
@@ -72,10 +72,12 @@ export function AjustesCuenta() {
   )
 }
 
-const CLASES: Record<ItemBitacora['clase'], string> = { libro: 'libro', carta: 'carta', sellado: 'sellado', incompleta: 'carta sin identificar' }
+const CLASES: Record<ItemBitacora['clase'], string> = { libro: 'libro', pelicula: 'película', serie: 'serie', videojuego: 'videojuego', carta: 'carta', sellado: 'sellado', incompleta: 'carta sin identificar' }
+const PLURALES: Partial<Record<ItemBitacora['clase'], string>> = { libro: 'ningún libro', pelicula: 'ninguna película', serie: 'ninguna serie', videojuego: 'ningún videojuego' }
 
 async function aceptar(item: ItemBitacora) {
   if (item.clase === 'libro') anadirPendiente(await libroDesdeBitacora(item))
+  else if (item.clase === 'pelicula' || item.clase === 'serie' || item.clase === 'videojuego') anadirPendiente(medioDesdeBitacora(item))
   else if (item.clase === 'carta') {
     const carta = await cartaDesdeBitacora(item)
     if (!carta) { avisar(`no encuentro «${item.titulo}» en tcgdex.`); return false }
@@ -110,8 +112,13 @@ export function Revision() {
     <div className="velo-pausa">
       <div className="editor-portada revision">
         <h2>llegan de bitácora.</h2>
-        <p>¿lo tienes en físico? lo que tengas irá a la mesa de la entrada (los libros) o a la zona pokémon (las cartas). lo que no, queda apuntado para el archivo.</p>
+        <p>¿lo tienes en físico? lo que tengas irá a la mesa de la entrada (libros, películas, series y juegos) o a la zona pokémon (las cartas). lo que no, queda apuntado para el archivo.</p>
         {ejemplos && <button className="quitar-ejemplos" onClick={quitarEjemplos}>quitar antes los libros y cartas de ejemplo.</button>}
+        <div className="atajos-revision">
+          {(Object.keys(PLURALES) as ItemBitacora['clase'][]).filter(c => items.filter(i => i.clase === c).length >= 3).map(c => (
+            <button key={c} disabled={!!trabajando} onClick={() => items.filter(i => i.clase === c).forEach(i => decidido(i.id, true))}>no tengo {PLURALES[c]} de estos.</button>
+          ))}
+        </div>
         <div className="lista-revision">
           {items.length === 0 && <p className="nota">todo revisado.</p>}
           {items.map(it => (

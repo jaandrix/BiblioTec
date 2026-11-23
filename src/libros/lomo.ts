@@ -54,10 +54,45 @@ export function cajaLibro(grosor: number, alto: number, fondo: number) {
   return g
 }
 
+const FRANJAS: Record<string, [string, string]> = {
+  dvd: ['#111111', 'dvd'],
+  bluray: ['#1f5fbf', 'blu-ray'],
+  '4k': ['#111111', '4k'],
+  switch: ['#e60012', 'switch'],
+  ds: ['#d8d8d8', 'ds'],
+  '3ds': ['#d8d8d8', '3ds'],
+  ps: ['#0b49a6', 'playstation'],
+  xbox: ['#107c10', 'xbox'],
+}
+
+function franjaDe(libro: Libro) {
+  if (libro.tipo === 'libro' || libro.formato === 'cartucho') return null
+  if (libro.tipo === 'videojuego') {
+    const p = (libro.plataforma ?? '').toLowerCase()
+    return FRANJAS[p] ?? (p.startsWith('ps') ? FRANJAS.ps : p.startsWith('xbox') ? FRANJAS.xbox : ['#555555', p || 'juego'])
+  }
+  return FRANJAS[libro.formato ?? 'dvd'] ?? FRANJAS.dvd
+}
+
 function pintarLomo(ctx: CanvasRenderingContext2D, libro: Libro, x: number, ancho: number, h: number, fondo: string, escala: number) {
   const tinta = colorDeTexto(fondo)
   ctx.fillStyle = fondo
   ctx.fillRect(x, 0, ancho, h)
+  const franja = franjaDe(libro)
+  if (franja) {
+    const alto = 46 * escala
+    ctx.fillStyle = franja[0]
+    ctx.fillRect(x, 0, ancho, alto)
+    ctx.save()
+    ctx.translate(x + ancho / 2, alto / 2)
+    ctx.rotate(Math.PI / 2)
+    ctx.fillStyle = colorDeTexto(franja[0].length === 7 ? franja[0] : '#111111')
+    ctx.font = `600 ${Math.min(ancho * 0.5, 10 * escala)}px Poppins, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(franja[1], 0, 0)
+    ctx.restore()
+  }
   ctx.fillStyle = tinta
   ctx.globalAlpha = 0.35
   ctx.fillRect(x, 23 * escala, ancho, 2 * escala)
@@ -72,11 +107,11 @@ function pintarLomo(ctx: CanvasRenderingContext2D, libro: Libro, x: number, anch
   ctx.textBaseline = 'middle'
   const cuerpo = Math.min(ancho * 0.42, 17 * escala)
   ctx.font = `600 ${cuerpo}px Poppins, sans-serif`
-  ctx.fillText(recortar(ctx, libro.titulo.toLowerCase(), h * 0.58), 45 * escala, 0)
+  ctx.fillText(recortar(ctx, libro.titulo.toLowerCase(), h * (libro.autor ? 0.58 : 0.78)), (franjaDe(libro) ? 60 : 45) * escala, 0)
   ctx.font = `400 ${cuerpo * 0.72}px Poppins, sans-serif`
   ctx.globalAlpha = 0.8
   ctx.textAlign = 'right'
-  ctx.fillText(recortar(ctx, libro.autor.toLowerCase(), h * 0.24), h - 40 * escala, 0)
+  if (libro.autor) ctx.fillText(recortar(ctx, libro.autor.toLowerCase(), h * 0.24), h - 40 * escala, 0)
   ctx.restore()
   if (libro.tomo) {
     ctx.globalAlpha = 1
@@ -97,7 +132,7 @@ function pintarPortadaSinImagen(ctx: CanvasRenderingContext2D, libro: Libro, x: 
   ctx.font = `600 ${15 * escala}px Poppins, sans-serif`
   ctx.fillText(recortar(ctx, libro.titulo.toLowerCase(), ancho * 0.85), x + ancho / 2, h * 0.4)
   ctx.font = `400 ${11 * escala}px Poppins, sans-serif`
-  ctx.fillText(recortar(ctx, libro.autor.toLowerCase(), ancho * 0.85), x + ancho / 2, h * 0.48)
+  if (libro.autor) ctx.fillText(recortar(ctx, libro.autor.toLowerCase(), ancho * 0.85), x + ancho / 2, h * 0.48)
 }
 
 export function texturaLibro(libro: Libro, grosor: number, alto: number, fondo: string, portada: HTMLImageElement | null, alta: boolean) {

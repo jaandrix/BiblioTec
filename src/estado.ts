@@ -39,7 +39,7 @@ export interface Enlace {
 
 export interface ItemBitacora {
   id: string
-  clase: 'libro' | 'carta' | 'sellado' | 'incompleta'
+  clase: 'libro' | 'pelicula' | 'serie' | 'videojuego' | 'carta' | 'sellado' | 'incompleta'
   titulo: string
   detalle: string
   imagen: string | null

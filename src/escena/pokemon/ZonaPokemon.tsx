@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { CanvasTexture, Group, RepeatWrapping, SRGBColorSpace } from 'three'
+import { CanvasTexture, Group, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from 'three'
+import { unirCajas, type Pieza } from '../fusionar'
 import { CAPACIDAD_CAJA, useEstado } from '../../estado'
 import type { Caja, Carta as TCarta, CriterioCartas, Sellado } from '../../tipos'
 import { interactivos } from '../registro'
@@ -86,35 +87,30 @@ function texturaTexto(texto: string, sub: string, fondo: string, tinta: string, 
   return t
 }
 
+const M_BLANCO = new MeshStandardMaterial({ color: BLANCO, roughness: 0.4, metalness: 0.2 })
+const M_FONDO = new MeshStandardMaterial({ color: '#e3ddd1', roughness: 0.6 })
+const M_ROJO = new MeshStandardMaterial({ color: ROJO, roughness: 0.5 })
+
+// Tres piezas por mueble (blanco, fondo y rojo) en vez de una por tabla.
 function Mueble({ x, z, ancho, fondo, alto, baldas }: { x: number; z: number; ancho: number; fondo: number; alto: number; baldas: number[] }) {
+  const piezas = useMemo(() => {
+    const blancas: Pieza[] = [
+      ...[-1, 1].map(s => ({ medidas: [0.03, alto, fondo], posicion: [s * (ancho / 2 - 0.015), alto / 2, 0] }) as Pieza),
+      ...baldas.map(y => ({ medidas: [ancho - 0.03, 0.02, fondo], posicion: [0, y, 0] }) as Pieza),
+    ]
+    const rojas: Pieza[] = [
+      ...baldas.map(y => ({ medidas: [ancho - 0.03, 0.03, 0.012], posicion: [0, y + 0.012, fondo / 2 - 0.008] }) as Pieza),
+      { medidas: [ancho + 0.02, 0.08, fondo + 0.02], posicion: [0, alto + 0.04, 0] },
+    ]
+    return { blancas: unirCajas(blancas), fondo: unirCajas([{ medidas: [ancho, alto, 0.02], posicion: [0, alto / 2, -fondo / 2 + 0.01] }]), rojas: unirCajas(rojas) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ancho, fondo, alto, baldas.join()])
+  useEffect(() => () => { piezas.blancas.dispose(); piezas.fondo.dispose(); piezas.rojas.dispose() }, [piezas])
   return (
     <group position={[x, 0, z]} rotation={[0, Math.PI / 2, 0]}>
-      {[-1, 1].map(s => (
-        <mesh key={s} position={[s * (ancho / 2 - 0.015), alto / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[0.03, alto, fondo]} />
-          <meshStandardMaterial color={BLANCO} roughness={0.4} metalness={0.2} />
-        </mesh>
-      ))}
-      <mesh position={[0, alto / 2, -fondo / 2 + 0.01]} receiveShadow>
-        <boxGeometry args={[ancho, alto, 0.02]} />
-        <meshStandardMaterial color="#e3ddd1" roughness={0.6} />
-      </mesh>
-      {baldas.map(y => (
-        <group key={y}>
-          <mesh position={[0, y, 0]} castShadow receiveShadow>
-            <boxGeometry args={[ancho - 0.03, 0.02, fondo]} />
-            <meshStandardMaterial color={BLANCO} roughness={0.35} metalness={0.25} />
-          </mesh>
-          <mesh position={[0, y + 0.012, fondo / 2 - 0.008]}>
-            <boxGeometry args={[ancho - 0.03, 0.03, 0.012]} />
-            <meshStandardMaterial color={ROJO} roughness={0.5} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, alto + 0.04, 0]} castShadow>
-        <boxGeometry args={[ancho + 0.02, 0.08, fondo + 0.02]} />
-        <meshStandardMaterial color={ROJO} roughness={0.5} />
-      </mesh>
+      <mesh geometry={piezas.blancas} material={M_BLANCO} castShadow receiveShadow />
+      <mesh geometry={piezas.fondo} material={M_FONDO} receiveShadow />
+      <mesh geometry={piezas.rojas} material={M_ROJO} castShadow />
     </group>
   )
 }

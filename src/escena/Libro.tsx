@@ -6,7 +6,7 @@ import { colorDeLibro, colorDominante } from '../libros/color'
 import { cajaLibro, texturaLibro } from '../libros/lomo'
 import type { Hueco, Libro as TLibro } from '../tipos'
 import { huecoCarro } from './Carro'
-import { altoLibro, grosorLibro, PROFUNDIDAD_LIBRO } from './distribucion'
+import { altoLibro, fondoLibro, grosorLibro } from './distribucion'
 import { control, giroInspeccion, mallasLibros } from './registro'
 
 export type Destino =
@@ -37,7 +37,8 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
   const abierto = useEstado(e => e.abierto === libro.id)
   const grosor = grosorLibro(libro)
   const alto = altoLibro(libro)
-  const geometria = useMemo(() => cajaLibro(grosor, alto, PROFUNDIDAD_LIBRO), [grosor, alto])
+  const fondo = fondoLibro(libro)
+  const geometria = useMemo(() => cajaLibro(grosor, alto, fondo), [grosor, alto, fondo])
   useEffect(() => () => geometria.dispose(), [geometria])
   const destinoRef = useRef(destino)
   destinoRef.current = destino
@@ -168,6 +169,7 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
   }, [abierto, libro.id])
 
   const tmpRot = useMemo(() => new Quaternion(), [])
+  const tmpPos = useMemo(() => new Vector3(), [])
   const tmpGiro = useMemo(() => new Quaternion(), [])
   const fuera = useMemo(() => new Vector3(), [])
   const euler = useMemo(() => new Euler(), [])
@@ -223,7 +225,7 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
     m.quaternion.copy(rot)
     if (d.tipo === 'balda') {
       const sale = apuntado ? 0.025 : 0
-      const actual = m.position.clone().sub(pos).dot(normal)
+      const actual = tmpPos.copy(m.position).sub(pos).dot(normal)
       const siguiente = actual + (sale - actual) * (1 - Math.exp(-18 * dt))
       m.position.copy(pos).addScaledVector(normal, siguiente)
     } else {

@@ -19,7 +19,7 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 3.5 | Pulido: inspección nueva, pausa y ajustes, zoom, dejar el carro, brazos, cambiar portadas, mejor aspecto | hecha |
 | 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado, vitrina de graduadas | hecha (con cartas de ejemplo) |
 | 5 | Cuentas, enlace con Bitácora, guardar en la nube | hecha |
-| 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | siguiente |
+| 6 | Películas, series y videojuegos (hecho); consolas, créditos en el juego y Spotify (pendiente) | a medias |
 
 ## Rendimiento (24-11)
 
