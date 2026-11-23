@@ -1,9 +1,10 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Group, Vector3 } from 'three'
+import { Group, Mesh, Quaternion, Vector3 } from 'three'
+import { leerEstado } from '../estado'
 import type { Caja } from '../tipos'
 import { SALA } from './distribucion'
-import { control } from './registro'
+import { control, interactivos } from './registro'
 
 const ANCHO = 0.86
 const FONDO = 0.46
@@ -30,7 +31,73 @@ export function cartChoca(x: number, z: number, cajas: Caja[]) {
   })
 }
 
+export function cajaCarroAparcado(): Caja {
+  const c = control.carro
+  if (!c) return { min: [0, 0], max: [0, 0] }
+  const r = Math.max(ANCHO, FONDO) / 2
+  return { min: [c.position.x - r, c.position.z - r], max: [c.position.x + r, c.position.z + r] }
+}
+
 const METAL = '#3d3a36'
+const MANGA = '#34405a'
+const PIEL = '#e0b08a'
+const ARRIBA = new Vector3(0, 1, 0)
+
+// Brazos en primera persona: del hombro (fijo a la cámara) a la mano, que agarra
+// el asa del carro. Con un codo, para que no parezcan palos.
+function Brazo({ lado }: { lado: 1 | -1 }) {
+  const brazo = useRef<Mesh>(null!)
+  const antebrazo = useRef<Mesh>(null!)
+  const mano = useRef<Mesh>(null!)
+  const v = useMemo(() => ({ hombro: new Vector3(), codo: new Vector3(), mano: new Vector3(), d: new Vector3(), q: new Quaternion() }), [])
+
+  const unir = (m: Mesh, a: Vector3, b: Vector3) => {
+    v.d.subVectors(b, a)
+    const largo = v.d.length()
+    m.position.addVectors(a, b).multiplyScalar(0.5)
+    m.quaternion.setFromUnitVectors(ARRIBA, v.d.normalize())
+    m.scale.set(1, largo, 1)
+  }
+
+  useFrame(() => {
+    const cam = control.camara, carro = control.carro
+    const visible = !!cam && !!carro && leerEstado().llevoCarro && !leerEstado().abierto
+    brazo.current.visible = antebrazo.current.visible = mano.current.visible = visible
+    if (!visible) return
+    v.hombro.set(lado * 0.24, -0.34, 0.12).applyMatrix4(cam.matrixWorld)
+    v.mano.set(lado * 0.27, SUELO_CESTA + 0.5, FONDO / 2 + 0.01)
+    carro.localToWorld(v.mano)
+    v.codo.lerpVectors(v.hombro, v.mano, 0.5)
+    v.codo.y -= 0.1
+    v.d.set(lado * 0.07, 0, 0).applyQuaternion(cam.quaternion)
+    v.codo.add(v.d)
+    unir(brazo.current, v.hombro, v.codo)
+    unir(antebrazo.current, v.codo, v.mano)
+    mano.current.position.copy(v.mano)
+    mano.current.quaternion.copy(carro.quaternion)
+  })
+
+  return (
+    <>
+      <mesh ref={brazo} castShadow>
+        <cylinderGeometry args={[0.05, 0.045, 1, 10]} />
+        <meshStandardMaterial color={MANGA} roughness={0.85} />
+      </mesh>
+      <mesh ref={antebrazo} castShadow>
+        <cylinderGeometry args={[0.042, 0.036, 1, 10]} />
+        <meshStandardMaterial color={MANGA} roughness={0.85} />
+      </mesh>
+      <mesh ref={mano} castShadow>
+        <boxGeometry args={[0.075, 0.06, 0.1]} />
+        <meshStandardMaterial color={PIEL} roughness={0.7} />
+      </mesh>
+    </>
+  )
+}
+
+export function Brazos() {
+  return <><Brazo lado={1} /><Brazo lado={-1} /></>
+}
 const MADERA = '#a8754a'
 
 export function Carro({ cajas }: { cajas: Caja[] }) {
@@ -40,7 +107,9 @@ export function Carro({ cajas }: { cajas: Caja[] }) {
 
   useEffect(() => {
     control.carro = grupo.current
-    return () => { control.carro = null }
+    grupo.current.traverse(o => { o.userData.id = 'carro' })
+    interactivos.set('carro', grupo.current)
+    return () => { control.carro = null; interactivos.delete('carro') }
   }, [])
 
   // El carro va delante de ti; si lo que tienes delante es una estantería, se
@@ -48,6 +117,8 @@ export function Carro({ cajas }: { cajas: Caja[] }) {
   useFrame((_, dt) => {
     const cam = control.camara
     if (!cam) return
+    // Aparcado se queda donde lo dejaste.
+    if (listo.current && !leerEstado().llevoCarro) return
     cam.getWorldDirection(dir)
     dir.y = 0
     dir.normalize()

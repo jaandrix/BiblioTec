@@ -5,6 +5,9 @@ export interface Config {
   criterios: Record<string, Criterio>
   extra: Record<string, number>
   guiaSuelo: boolean
+  sensibilidad: number
+  calidad: 'alta' | 'baja'
+  sonido: boolean
 }
 
 export interface Coleccion {
@@ -12,6 +15,7 @@ export interface Coleccion {
   pendientes: string[]
   carro: string[]
   hoy: { fecha: string; n: number }
+  portadas: Record<string, string>
 }
 
 interface Estado {
@@ -21,6 +25,10 @@ interface Estado {
   guia: string | null
   terminal: boolean
   menuOrden: string | null
+  pausa: boolean
+  inicio: boolean
+  llevoCarro: boolean
+  editarPortada: string | null
   aviso: { texto: string; n: number } | null
   config: Config
   coleccion: Coleccion
@@ -56,9 +64,13 @@ let estado: Estado = {
   guia: null,
   terminal: false,
   menuOrden: null,
+  pausa: false,
+  inicio: true,
+  llevoCarro: true,
+  editarPortada: null,
   aviso: null,
-  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true }),
-  coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 } }),
+  config: leer<Config>(CLAVE_CONFIG, { criterios: {}, extra: {}, guiaSuelo: true, sensibilidad: 1, calidad: 'alta', sonido: true }),
+  coleccion: leer<Coleccion>(CLAVE_COLECCION, { anadidos: [], pendientes: PENDIENTES_INICIALES, carro: [], hoy: { fecha: hoyCivil(), n: 0 }, portadas: {} }),
 }
 const oyentes = new Set<() => void>()
 
@@ -83,6 +95,16 @@ export function cambiarCriterio(seccion: string, criterio: Criterio) {
 export function sumarModulo(seccion: string) {
   const c = estado.config
   cambiarEstado({ config: { ...c, extra: { ...c.extra, [seccion]: (c.extra[seccion] ?? 0) + 1 } } })
+}
+
+export function cambiarAjuste<K extends keyof Config>(clave: K, valor: Config[K]) {
+  cambiarEstado({ config: { ...estado.config, [clave]: valor } })
+}
+
+export function ponerPortada(id: string, url: string | null) {
+  const portadas = { ...estado.coleccion.portadas }
+  if (url) portadas[id] = url; else delete portadas[id]
+  cambiarEstado({ coleccion: { ...estado.coleccion, portadas } })
 }
 
 export function alternarGuiaSuelo() {

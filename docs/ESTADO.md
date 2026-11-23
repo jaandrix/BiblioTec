@@ -16,20 +16,22 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 | 1 | Sala, lomos del color de la portada, moverse, abrir un libro con animación | hecha |
 | 2 | Estanterías por género, ordenar, ampliar, ordenador retro | hecha |
 | 3 | Mesa de entrada, carro, huecos que brillan, añadir libros por título | hecha |
+| 3.5 | Pulido: inspección nueva, pausa y ajustes, zoom, dejar el carro, brazos, cambiar portadas, mejor aspecto | hecha |
 | 4 | Cartas Pokémon: expositores, cajas negras de 25, producto sellado | siguiente |
 | 5 | Cuentas, enlace con Bitácora, guardar en la nube | pendiente |
 | 6 | Spotify, películas, series, juegos, consolas, créditos en el juego, pulido | pendiente |
 
 ## Cómo se juega
 
-1. **Entrar:** clic en la pantalla. `w a s d` para andar, `mayús` para correr, ratón para mirar y `esc` para salir.
-2. **Mirar un libro:** apunta con el punto del centro y haz clic. El libro sale de la balda, vuela hacia ti y enseña su portada, con la ficha al lado. Arrastra para girarlo; `esc` o clic fuera para devolverlo.
+1. **Entrar:** clic en la pantalla. `w a s d` para andar, `mayús` para correr, ratón para mirar, rueda para acercar la vista. `esc` abre la pausa (controles y ajustes: sensibilidad, calidad gráfica, sonido, flechas).
+2. **Mirar un libro:** apunta con el punto del centro y haz clic. El libro vuela hacia ti enseñando la portada, con la ficha al lado. Mueve el ratón para girarlo, `f` le da la vuelta, la rueda lo acerca, `p` cambia la portada (otras ediciones, una foto tuya o un enlace) y clic lo devuelve.
 3. **Ordenar una estantería:** mirando uno de sus libros, pulsa `o` y elige: autor, saga, color, alfabético, año, páginas o fecha de alta. Los libros se recolocan en cascada.
-4. **Ordenar lo nuevo:**
+4. **El carro:** `c` lo deja aparcado para pasear sin él; acércate y pulsa `c` (o haz clic en él) para cogerlo.
+5. **Ordenar lo nuevo:**
    1. En la mesa "por ordenar." de la entrada, haz clic en un libro para cogerlo al carro (`t` los coge todos).
-   2. Sigue las flechas del suelo (`g` las apaga) hasta el hueco que brilla.
-   3. Haz clic en el hueco y el libro vuela a su sitio. Arriba a la izquierda se cuenta lo que llevas hoy.
-5. **Ordenador retro** (a la izquierda de la entrada): clic para usarlo y escribe `ayuda`. Los más útiles:
+   2. Sigue las flechas del suelo (`g` las apaga) hasta el hueco que brilla, con una flecha flotando encima.
+   3. Apunta al hueco y haz clic: el libro vuela a su sitio. Arriba a la izquierda se cuenta lo que llevas hoy y qué toca hacer.
+6. **Ordenador retro** (a la izquierda de la entrada): clic para usarlo y escribe `ayuda`. Los más útiles:
    - `buscar tolkien` y luego `ir 1`: te marca el libro con una columna de luz.
    - `donde dune`: en qué estantería, mueble y balda está, y dónde lo tienes en casa.
    - `ordenar fantasia por color` o `ordenar todas por saga`.
@@ -55,7 +57,12 @@ Ya puedes entrar en una biblioteca 3D desde el navegador: pasear, abrir libros, 
 - **Películas, series, videojuegos, consolas, Spotify y modelos 3D más bonitos** (Kenney, Poly Pizza): fases 4 a 6.
 - **Encargos externos:** los resultados de DeepSeek (medidas reales, productos Pokémon, textos del terminal) y la prueba de OpenCode aún no han llegado. La fase 4 aprovechará los datos de DeepSeek si los tienes.
 
+## Auditoría
+
+Si quieres que otra IA lo revise todo, pásale `docs/encargos/auditoria.md`: tiene un bloque de experiencia de uso (Gemini), otro de código y otro de medición (OpenCode o DeepSeek).
+
 ## Avisos
 
 - El repositorio es **público** para poder publicar la web gratis. No contiene datos tuyos. Cuando entren tus datos reales, los guardaremos en Supabase, no en el código.
 - Algunos libros añadidos desde Open Library salen con el título en su idioma original.
+- Una portada pegada como enlace solo funciona si esa web deja usar sus imágenes desde otras páginas; si no, sube la foto.

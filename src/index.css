@@ -36,6 +36,7 @@ kbd {
 }
 
 .ficha {
+  pointer-events: none;
   position: fixed; right: 4vw; top: 50%; width: min(360px, 34vw); transform: translateY(-50%);
   background: var(--fondo-panel); padding: 28px; border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
@@ -145,3 +146,53 @@ kbd {
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .aviso { animation: none; } }
+
+.controles-ficha { list-style: none; margin: 0; padding: 14px 0 0; border-top: 1px solid #3a2e25; display: grid; gap: 6px; font-size: 13px; color: var(--tinta-suave); }
+.controles-ficha kbd { min-width: 48px; display: inline-block; text-align: center; }
+
+.lista-controles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--tinta-suave); }
+.lista-controles li { display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 10px; }
+.lista-controles kbd { text-align: center; }
+
+.seguir {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); cursor: pointer;
+  background: var(--fondo-panel); padding: 12px 22px; border-radius: 10px; font-size: 15px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.velo-pausa { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(20, 14, 10, 0.55); }
+.pausa, .editor-portada {
+  background: var(--fondo-panel); border-radius: 12px; padding: 28px 32px; width: min(460px, 92vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: aparecer 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pausa h1 { margin: 0 0 16px; font-size: 32px; font-weight: 600; }
+.pestanas { display: flex; gap: 6px; margin-bottom: 18px; }
+.pausa button, .editor-portada button, .editor-portada .boton {
+  font: inherit; font-size: 14px; border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer;
+  background: #3a2e25; color: var(--tinta);
+}
+.pausa button:hover, .editor-portada button:hover, .editor-portada .boton:hover { background: #4a3b2f; }
+.pausa button.activa, .editor-portada button.activa { background: #5a4636; outline: 2px solid var(--acento); }
+.pausa button.principal, .editor-portada button.principal { width: 100%; margin-top: 22px; padding: 11px; background: var(--acento); color: #241c16; font-weight: 600; }
+.pausa .pista { margin: 10px 0 0; text-align: center; font-size: 12px; color: var(--tinta-suave); }
+.ajustes { display: grid; gap: 14px; font-size: 14px; }
+.ajustes label, .ajuste { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.ajustes .pestanas { margin: 0; }
+.ajustes input[type=range] { accent-color: var(--acento); width: 180px; }
+
+.editor-portada { width: min(640px, 94vw); }
+.editor-portada .cabecera { display: flex; gap: 16px; align-items: center; margin-bottom: 18px; }
+.editor-portada .cabecera img { width: 72px; border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+.editor-portada h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.editor-portada h3 { margin: 0 0 10px; font-size: 14px; font-weight: 500; color: var(--tinta-suave); }
+.editor-portada p { margin: 4px 0 0; font-size: 14px; color: var(--tinta-suave); }
+.ediciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 18px; }
+.ediciones button { padding: 4px !important; }
+.ediciones img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 4px; display: block; }
+.ediciones .nota { grid-column: 1 / -1; }
+.editor-portada .otras { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.editor-portada form { display: flex; gap: 8px; flex: 1; min-width: 240px; }
+.editor-portada form input { flex: 1; font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 1px solid #4a3b2f; background: #1a1410; color: var(--tinta); }
+.editor-portada .pie { display: flex; gap: 10px; align-items: flex-end; }
+.editor-portada .pie button.principal { margin-top: 18px; }
+.editor-portada .pie button:first-child { margin-top: 18px; white-space: nowrap; }

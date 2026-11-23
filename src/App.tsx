@@ -1,8 +1,11 @@
+import { Environment, Lightformer } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
+import { Bloom, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
+import { ToneMappingMode } from 'postprocessing'
 import { useMemo } from 'react'
 import { PCFSoftShadowMap } from 'three'
 import librosDemo from './datos/libros-demo.json'
-import { Carro } from './escena/Carro'
+import { Brazos, Carro } from './escena/Carro'
 import { cajasDeChoque, construir } from './escena/distribucion'
 import { CAJA_MESA, Entrada, posicionesMesa } from './escena/Entrada'
 import { Guia } from './escena/Guia'
@@ -21,8 +24,12 @@ const LIBROS = librosDemo as TLibro[]
 
 export default function App() {
   const config = useEstado(e => e.config)
+  const alta = config.calidad === 'alta'
   const coleccion = useEstado(e => e.coleccion)
-  const todos = useMemo(() => [...LIBROS, ...coleccion.anadidos.filter(a => !LIBROS.some(l => l.id === a.id))], [coleccion.anadidos])
+  const todos = useMemo(() => {
+    const base = [...LIBROS, ...coleccion.anadidos.filter(a => !LIBROS.some(l => l.id === a.id))]
+    return base.map(l => (coleccion.portadas[l.id] ? { ...l, portada: coleccion.portadas[l.id] } : l))
+  }, [coleccion.anadidos, coleccion.portadas])
 
   // Los del carro ya cuentan en la estantería: así su hueco queda abierto y se
   // ilumina, y los vecinos se apartan para dejarle sitio.
@@ -50,16 +57,31 @@ export default function App() {
 
   return (
     <>
-      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ fov: 62, near: 0.05, far: 60 }} dpr={[1, 2]}>
+      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ fov: 62, near: 0.05, far: 60 }} dpr={alta ? [1, 2] : 1}>
+        {/* Reflejos suaves de luz cálida sin descargar ningún mapa de entorno. */}
+        <Environment resolution={128} frames={1}>
+          <Lightformer intensity={1.2} color="#ffe6c4" position={[0, 4, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 10, 1]} />
+          <Lightformer intensity={0.6} color="#cfe6ff" position={[6, 2, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[6, 2, 1]} />
+          <Lightformer intensity={0.4} color="#ffcf99" position={[-6, 2, 0]} rotation={[0, Math.PI / 2, 0]} scale={[6, 2, 1]} />
+        </Environment>
         <Sala muebles={biblioteca.muebles} secciones={biblioteca.secciones} />
         <Entrada pendientes={coleccion.pendientes.length} />
         <Carro cajas={cajas} />
+        <Brazos />
         {libros.map(l => <Libro key={l.id} libro={l} destino={destinos.get(l.id)!} />)}
         <Huecos huecos={huecosCarro} />
         <GuiaSuelo huecos={huecosCarro} />
         <Terminal3D libros={biblioteca.huecos.length} estanterias={biblioteca.secciones.length} />
         <Guia />
         <Jugador cajas={cajas} />
+        {alta && (
+          <EffectComposer multisampling={4}>
+            <N8AO aoRadius={0.6} intensity={2.2} distanceFalloff={0.6} halfRes />
+            <Bloom luminanceThreshold={0.95} intensity={0.45} mipmapBlur />
+            <Vignette offset={0.3} darkness={0.45} />
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          </EffectComposer>
+        )}
       </Canvas>
       <Interfaz libros={todos} />
     </>

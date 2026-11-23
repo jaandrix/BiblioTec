@@ -1,3 +1,5 @@
+import { leerEstado } from './estado'
+
 let ctx: AudioContext | null = null
 
 function audio() {
@@ -11,6 +13,7 @@ function audio() {
 }
 
 function tono(frecuencia: number, retraso = 0, duracion = 0.09, volumen = 0.12) {
+  if (!leerEstado().config.sonido) return
   const a = audio()
   if (!a) return
   const t = a.currentTime + retraso

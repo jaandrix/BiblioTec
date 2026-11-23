@@ -18,18 +18,41 @@ export function Huecos({ huecos }: { huecos: Hueco[] }) {
     return () => { interactivos.delete('huecos') }
   }, [])
 
+  const invisible = useMemo(() => new MeshBasicMaterial({ visible: false }), [])
+  const flechas = useRef<Group>(null!)
+
   useFrame(({ clock }) => {
     material.opacity = 0.6 + 0.3 * Math.sin(clock.elapsedTime * 4)
+    flechas.current.children.forEach((f, i) => {
+      f.position.y = (f.userData.base as number) + Math.abs(Math.sin(clock.elapsedTime * 3 + i)) * 0.05
+    })
   })
 
+  // Lo que se apunta es más ancho que el hueco (un libro fino es difícil de
+  // acertar), y encima de cada hueco flota una flecha que lo señala.
   return (
-    <group ref={grupo}>
-      {huecos.map(h => (
-        <mesh key={h.libro.id} position={h.posicion} rotation={[0, h.giro, 0]} material={material} userData={{ id: `hueco:${h.libro.id}` }}>
-          <boxGeometry args={[h.medidas[0] * 1.15, h.medidas[1] * 1.04, h.medidas[2] * 1.04]} />
-        </mesh>
-      ))}
-    </group>
+    <>
+      <group ref={grupo}>
+        {huecos.map(h => (
+          <group key={h.libro.id} position={h.posicion} rotation={[0, h.giro, 0]}>
+            <mesh material={material}>
+              <boxGeometry args={[h.medidas[0] * 1.15, h.medidas[1] * 1.04, h.medidas[2] * 1.04]} />
+            </mesh>
+            <mesh material={invisible} userData={{ id: `hueco:${h.libro.id}` }} position={[0, 0.02, 0.04]}>
+              <boxGeometry args={[Math.max(0.12, h.medidas[0] * 2), h.medidas[1] + 0.08, h.medidas[2] + 0.08]} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <group ref={flechas}>
+        {huecos.map(h => (
+          <mesh key={h.libro.id} position={[h.posicion[0] + Math.sin(h.giro) * 0.1, h.posicion[1] + h.medidas[1] / 2 + 0.1, h.posicion[2] + Math.cos(h.giro) * 0.1]} rotation={[Math.PI, 0, 0]} userData={{ base: h.posicion[1] + h.medidas[1] / 2 + 0.1 }}>
+            <coneGeometry args={[0.035, 0.07, 4]} />
+            <meshBasicMaterial color="#ffb347" toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+    </>
   )
 }
 

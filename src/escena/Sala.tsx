@@ -4,6 +4,10 @@ import { CanvasTexture, Group, SRGBColorSpace } from 'three'
 import { CRITERIOS } from '../libros/orden'
 import type { Mueble, Seccion } from '../tipos'
 import { ISLA_Z, MUEBLE, SALA } from './distribucion'
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
+import { alfombra, madera, pared, sueloMadera } from './texturas'
+
+RectAreaLightUniformsLib.init()
 
 const MADERA = '#8a5a34'
 const MADERA_CLARA = '#a8754a'
@@ -86,17 +90,17 @@ function Estanteria({ m, seccion }: { m: Mueble; seccion?: Seccion }) {
       {[-1, 1].map(lado => (
         <mesh key={lado} position={[lado * (MUEBLE.ancho / 2 - t / 2), MUEBLE.alto / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[t, MUEBLE.alto, MUEBLE.fondo]} />
-          <meshStandardMaterial color={MADERA} roughness={0.85} />
+          <meshStandardMaterial map={madera(MADERA, false)} roughness={0.75} />
         </mesh>
       ))}
       <mesh position={[0, MUEBLE.alto / 2, -MUEBLE.fondo / 2 + 0.006]} receiveShadow>
         <boxGeometry args={[MUEBLE.ancho - 2 * t, MUEBLE.alto, 0.012]} />
-        <meshStandardMaterial color={MADERA} roughness={0.9} />
+        <meshStandardMaterial map={madera('#7a4e2c', false)} roughness={0.9} />
       </mesh>
       {Array.from({ length: MUEBLE.baldas + 1 }, (_, i) => (
         <mesh key={i} position={[0, i * paso + t / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[MUEBLE.ancho - 2 * t, t, MUEBLE.fondo]} />
-          <meshStandardMaterial color={MADERA_CLARA} roughness={0.8} />
+          <meshStandardMaterial map={madera(MADERA_CLARA)} roughness={0.7} />
         </mesh>
       ))}
       {m.indice === 0 && seccion && <Cartel seccion={seccion} />}
@@ -130,12 +134,44 @@ function Rotulo() {
   )
 }
 
+// Luz de las ventanas según la hora real: día claro, atardecer naranja, noche azul.
+function cieloAhora() {
+  const h = new Date().getHours() + new Date().getMinutes() / 60
+  if (h >= 8 && h < 18) return { color: '#cfe6ff', fuerza: 2.2 }
+  if ((h >= 18 && h < 21) || (h >= 6 && h < 8)) return { color: '#ffb36b', fuerza: 1.8 }
+  return { color: '#3b4f7a', fuerza: 0.9 }
+}
+
+function Ventanas() {
+  const cielo = useMemo(cieloAhora, [])
+  const x = SALA.ancho / 2 - 0.02
+  return (
+    <>
+      {[-2.6, 1.2].map(z => (
+        <group key={z} position={[x, 1.75, z]} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh>
+            <planeGeometry args={[1.5, 1.4]} />
+            <meshBasicMaterial color={cielo.color} toneMapped={false} />
+          </mesh>
+          {[[0, 0.72, 1.62, 0.08], [0, -0.72, 1.62, 0.1], [0.77, 0, 0.08, 1.5], [-0.77, 0, 0.08, 1.5], [0, 0, 0.04, 1.4], [0, 0, 1.5, 0.04]].map(([px, py, w, h], i) => (
+            <mesh key={i} position={[px, py, 0.03]}>
+              <boxGeometry args={[w, h, 0.06]} />
+              <meshStandardMaterial color="#f4ece0" roughness={0.6} />
+            </mesh>
+          ))}
+          <rectAreaLight args={[cielo.color, cielo.fuerza, 1.5, 1.4]} position={[0, 0, 0.05]} rotation={[0, Math.PI, 0]} />
+        </group>
+      ))}
+    </>
+  )
+}
+
 export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Seccion[] }) {
   const { ancho, fondo, alto } = SALA
   return (
     <>
       <color attach="background" args={['#2a221c']} />
-      <hemisphereLight args={['#fff1dc', '#8a6446', 1.5]} />
+      <hemisphereLight args={['#fff1dc', '#8a6446', 0.9]} />
       <directionalLight
         position={[3, 6, 4]}
         intensity={1.2}
@@ -160,8 +196,18 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
       )))}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[ancho, fondo]} />
-        <meshStandardMaterial color="#b88a5c" roughness={0.9} />
+        <meshStandardMaterial map={sueloMadera([ancho / 3, fondo / 3])} roughness={0.55} />
       </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0.6, 0.004, 3.4]} receiveShadow>
+        <planeGeometry args={[2.4, 1.6]} />
+        <meshStandardMaterial map={alfombra()} roughness={1} />
+      </mesh>
+      {[-3, 0, 3].map(z => (
+        <mesh key={z} position={[0, alto - 0.09, z]} castShadow>
+          <boxGeometry args={[ancho, 0.18, 0.22]} />
+          <meshStandardMaterial map={madera('#6e4a2c')} roughness={0.8} />
+        </mesh>
+      ))}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, alto, 0]}>
         <planeGeometry args={[ancho, fondo]} />
         <meshStandardMaterial color="#e9dfcf" roughness={1} />
@@ -175,7 +221,11 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         <group key={i} position={w.p as [number, number, number]} rotation={[0, w.r, 0]}>
           <mesh receiveShadow>
             <planeGeometry args={[w.a, alto]} />
-            <meshStandardMaterial color="#efe4d2" roughness={1} />
+            <meshStandardMaterial map={pared([w.a / 2, alto / 2])} roughness={1} />
+          </mesh>
+          <mesh position={[0, 0.9 - alto / 2, 0.012]}>
+            <boxGeometry args={[w.a, 0.04, 0.02]} />
+            <meshStandardMaterial color={MADERA} roughness={0.8} />
           </mesh>
           <mesh position={[0, 0.06 - alto / 2, 0.01]}>
             <boxGeometry args={[w.a, 0.12, 0.02]} />
@@ -184,6 +234,7 @@ export function Sala({ muebles, secciones }: { muebles: Mueble[]; secciones: Sec
         </group>
       ))}
       <Rotulo />
+      <Ventanas />
       {muebles.map(m => <Estanteria key={m.id} m={m} seccion={secciones.find(s => s.id === m.seccion)} />)}
     </>
   )

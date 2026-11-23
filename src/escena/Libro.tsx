@@ -167,10 +167,8 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
       const cam = control.camara!
       const delante = new Vector3(0, 0, -1).applyQuaternion(cam.quaternion)
       const izquierda = new Vector3(-1, 0, 0).applyQuaternion(cam.quaternion)
-      a.abrirPos.copy(cam.position).addScaledVector(delante, 0.42).addScaledVector(izquierda, 0.07)
-      a.abrirRot.copy(cam.quaternion).multiply(GIRO_PORTADA)
-      giroInspeccion.x = 0
-      giroInspeccion.y = 0
+      a.abrirPos.copy(cam.position).addScaledVector(delante, giroInspeccion.distancia).addScaledVector(izquierda, 0.07)
+      a.abrirRot.copy(cam.quaternion)
       a.t = 0
       a.duracion = 0.7
       a.fase = 'abriendo'
@@ -198,8 +196,17 @@ export function Libro({ libro, destino }: { libro: TLibro; destino: Destino }) {
 
     if (a.fase === 'abriendo') {
       a.t = Math.min(1, a.t + dt / a.duracion)
-      euler.set(giroInspeccion.x, giroInspeccion.y, 0)
-      tmpRot.copy(a.abrirRot).multiply(tmpGiro.setFromEuler(euler))
+      // El giro se aplica en los ejes de la cámara: arrastrar a los lados lo hace
+      // girar sobre sí mismo, arriba y abajo lo inclina hacia ti. Sin giro, la
+      // portada mira de frente.
+      euler.set(giroInspeccion.x, giroInspeccion.y, 0, 'XYZ')
+      tmpRot.copy(a.abrirRot).multiply(tmpGiro.setFromEuler(euler)).multiply(GIRO_PORTADA)
+      const cam = control.camara
+      if (cam) {
+        const delante = fuera.set(0, 0, -1).applyQuaternion(cam.quaternion)
+        a.abrirPos.copy(cam.position).addScaledVector(delante, giroInspeccion.distancia)
+        a.abrirPos.addScaledVector(fuera.set(-1, 0, 0).applyQuaternion(cam.quaternion), 0.07)
+      }
       // Primero sale de la balda, luego vuela hacia ti girando hasta enseñar la portada.
       fuera.copy(a.desdePos).addScaledVector(a.normalDesde, SACAR)
       if (a.t < 0.3) {

@@ -62,8 +62,8 @@ export async function colorDominante(url: string): Promise<string> {
     mejor = [...cubos.values()].reduce((a, c) => (c.n > a.n ? c : a), mejor)
   }
   const hex = '#' + [mejor.r, mejor.g, mejor.b].map(v => Math.round(v / mejor.n).toString(16).padStart(2, '0')).join('')
-  cache[url] = hex
-  guardar()
+  // Las fotos subidas son data: URL enormes: no se guardan como clave.
+  if (!url.startsWith('data:')) { cache[url] = hex; guardar() }
   return hex
 }
 
